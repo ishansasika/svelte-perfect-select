@@ -1,7 +1,7 @@
-import Select from './lib/Select.svelte'
+import App from './App.svelte'
 
-const select = new Select({
-  target: document.getElementById('select')
+const app = new App({
+  target: document.getElementById('app')
 })
 
-export default select;
+export default app
