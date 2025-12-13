@@ -31,7 +31,7 @@
 
   // Styling & Size
   export let selectSize = "medium";
-  export let containerSize = "medium"; // Container physical size: 'xs', 'sm', 'md', 'lg', 'xl'
+  export let containerSize = "md"; // Container physical size: 'xs', 'sm', 'md', 'lg', 'xl'
   export let theme = "blue"; // Color theme: 'blue', 'purple', 'green', 'red', 'orange', 'pink', 'dark'
   export let borderRadius = "8px"; // Border radius for modern look
   export let customStyles = {}; // Custom style overrides: { container, control, menu, option, tag }
@@ -47,6 +47,18 @@
 
   // Groups
   export let isGrouped = false;
+  export let groupBy = null; // Function to group options: (option) => string
+
+  // Advanced Features
+  export let showSelectAll = false; // Show Select All / Deselect All for multi-select
+  export let selectAllText = "Select All";
+  export let deselectAllText = "Deselect All";
+  export let showOptionIcons = false; // Enable icon support in options
+  export let showOptionBadges = false; // Enable badge support in options
+  export let maxOptionsDisplay = 1000; // Maximum options to render (virtual scrolling threshold)
+  export let optionHeight = 40; // Height of each option for virtual scrolling
+  export let emptyStateText = "No options available";
+  export let emptySearchText = "No results found";
 
   // Misc
   export let name = "svelte-perfect-select";
@@ -82,7 +94,7 @@
   let selectContainer;
   let searchInput;
   let menuRef;
-  let internalOptions = [...options];
+  let internalOptions = options.length > 0 ? [...options] : [];
   let optionsCache = {};
   let isLoadingAsync = false;
 
@@ -146,9 +158,11 @@
       return opts.filter(opt => filterOption({ label: getOptionLabel(opt), value: getOptionValue(opt), data: opt }, term));
     }
 
-    return opts.filter(opt =>
-      getOptionLabel(opt).toLowerCase().includes(term.toLowerCase())
-    );
+    const lowerTerm = term.toLowerCase();
+    return opts.filter(opt => {
+      const label = getOptionLabel(opt);
+      return label && label.toLowerCase().includes(lowerTerm);
+    });
   }
 
   // Create option
@@ -169,11 +183,28 @@
     !filteredOptions.some(opt => getOptionLabel(opt).toLowerCase() === searchTerm.toLowerCase()) &&
     (!isLoadingAsync || allowCreateWhileLoading);
 
+  // Group options if groupBy is provided
+  $: groupedOptions = groupBy && isGrouped && typeof groupBy === 'function'
+    ? filteredOptions.reduce((groups, option) => {
+        const groupKey = groupBy(option);
+        if (!groups[groupKey]) {
+          groups[groupKey] = [];
+        }
+        groups[groupKey].push(option);
+        return groups;
+      }, {})
+    : null;
+
   $: displayOptions = showCreateOption
     ? createOptionPosition === 'first'
       ? [{ __isCreate__: true, value: searchTerm }, ...filteredOptions]
       : [...filteredOptions, { __isCreate__: true, value: searchTerm }]
     : filteredOptions;
+
+  $: allOptionsSelected = multiple && value.length > 0 &&
+    displayOptions.filter(opt => !isOptionDisabled(opt)).every(opt => value.includes(getOptionValue(opt)));
+
+  $: someOptionsSelected = multiple && value.length > 0 && !allOptionsSelected;
 
   // Functions
   async function toggleDropdown() {
@@ -238,6 +269,27 @@
     searchTerm = "";
     dispatch('clear');
     dispatch('change', { value, action: 'clear' });
+  }
+
+  function selectAll() {
+    if (!multiple) return;
+    const selectableOptions = displayOptions.filter(opt => !isOptionDisabled(opt) && !opt.__isCreate__);
+    value = selectableOptions.map(opt => getOptionValue(opt));
+    dispatch('change', { value, action: 'select-all' });
+  }
+
+  function deselectAll() {
+    if (!multiple) return;
+    value = [];
+    dispatch('change', { value, action: 'deselect-all' });
+  }
+
+  function toggleSelectAll() {
+    if (allOptionsSelected) {
+      deselectAll();
+    } else {
+      selectAll();
+    }
   }
 
   async function handleSearch(event) {
@@ -473,53 +525,157 @@
         {#if isLoadingAsync}
           <div class="loading-message">{loadingMessage()}</div>
         {:else if displayOptions.length === 0}
-          <div class="no-options">{noOptionsMessage({ inputValue: searchTerm })}</div>
+          <div class="no-options">
+            {searchTerm ? emptySearchText : emptyStateText}
+          </div>
         {:else}
-          {#each displayOptions as option, index (option.__isCreate__ ? `create-${option.value}` : getOptionValue(option))}
-            <div
-              class="option"
-              class:selected={!option.__isCreate__ && isSelected(option)}
-              class:highlighted={index === highlightedIndex}
-              class:disabled={!option.__isCreate__ && isOptionDisabled(option)}
-              class:create-option={option.__isCreate__}
-              class:hidden={!option.__isCreate__ && hideSelectedOptions && isSelected(option)}
-              on:click={() => selectOption(option)}
-              on:keydown={(e) => e.key === 'Enter' && selectOption(option)}
-              on:mouseenter={() => highlightedIndex = index}
-              role="option"
-              tabindex="-1"
-              aria-selected={!option.__isCreate__ && isSelected(option)}
-              aria-disabled={!option.__isCreate__ && isOptionDisabled(option)}
-              in:fly="{{ y: -5, duration: 150, delay: index * 20 }}"
-            >
-              {#if multiple && !option.__isCreate__}
+          {#if multiple && showSelectAll && !searchTerm}
+            <div class="select-all-container">
+              <button
+                class="select-all-button"
+                on:click={toggleSelectAll}
+                type="button"
+              >
                 <input
                   type="checkbox"
-                  checked={isSelected(option)}
-                  disabled={isOptionDisabled(option)}
+                  checked={allOptionsSelected}
+                  indeterminate={someOptionsSelected}
                   tabindex="-1"
                   aria-hidden="true"
                 />
-              {/if}
-              <span class="option-label">
-                {#if option.__isCreate__}
-                  {formatCreateLabel(option.value)}
-                {:else}
-                  {getOptionLabel(option)}
-                {/if}
-              </span>
-              {#if option.description && !option.__isCreate__}
-                <span class="option-description">{option.description}</span>
-              {/if}
-              {#if !option.__isCreate__ && isSelected(option)}
-                <span class="check-icon">
-                  <svg width="16" height="16" viewBox="0 0 20 20">
-                    <path d="M7.629 12.173l-2.83-2.83c-0.293-0.293-0.768-0.293-1.061 0s-0.293 0.768 0 1.061l3.36 3.36c0.293 0.293 0.768 0.293 1.061 0l7.36-7.36c0.293-0.293 0.293-0.768 0-1.061s-0.768-0.293-1.061 0l-6.829 6.83z"></path>
-                  </svg>
+                <span class="select-all-text">
+                  {allOptionsSelected ? deselectAllText : selectAllText}
                 </span>
-              {/if}
+                <span class="select-all-count">
+                  ({value.length}/{displayOptions.filter(opt => !isOptionDisabled(opt)).length})
+                </span>
+              </button>
             </div>
-          {/each}
+          {/if}
+
+          {#if groupedOptions}
+            {#each Object.entries(groupedOptions) as [groupName, groupOptions]}
+              <div class="option-group">
+                <div class="option-group-label">{groupName}</div>
+                {#each groupOptions as option, index (getOptionValue(option))}
+                  <div
+                    class="option"
+                    class:selected={isSelected(option)}
+                    class:highlighted={index === highlightedIndex}
+                    class:disabled={isOptionDisabled(option)}
+                    class:hidden={hideSelectedOptions && isSelected(option)}
+                    on:click={() => selectOption(option)}
+                    on:keydown={(e) => e.key === 'Enter' && selectOption(option)}
+                    on:mouseenter={() => highlightedIndex = index}
+                    role="option"
+                    tabindex="-1"
+                    aria-selected={isSelected(option)}
+                    aria-disabled={isOptionDisabled(option)}
+                    in:fly="{{ y: -5, duration: 150, delay: index * 15 }}"
+                  >
+                    {#if multiple}
+                      <input
+                        type="checkbox"
+                        checked={isSelected(option)}
+                        disabled={isOptionDisabled(option)}
+                        tabindex="-1"
+                        aria-hidden="true"
+                      />
+                    {/if}
+                    {#if showOptionIcons && option.icon}
+                      <span class="option-icon">
+                        {#if typeof option.icon === 'string'}
+                          <img src={option.icon} alt="" class="option-icon-img" />
+                        {:else}
+                          {@html option.icon}
+                        {/if}
+                      </span>
+                    {/if}
+                    <div class="option-content">
+                      <span class="option-label">{getOptionLabel(option)}</span>
+                      {#if option.description}
+                        <span class="option-description">{option.description}</span>
+                      {/if}
+                    </div>
+                    {#if showOptionBadges && option.badge}
+                      <span class="option-badge" style="background-color: {option.badgeColor || '#E5E7EB'}">
+                        {option.badge}
+                      </span>
+                    {/if}
+                    {#if isSelected(option)}
+                      <span class="check-icon">
+                        <svg width="16" height="16" viewBox="0 0 20 20">
+                          <path d="M7.629 12.173l-2.83-2.83c-0.293-0.293-0.768-0.293-1.061 0s-0.293 0.768 0 1.061l3.36 3.36c0.293 0.293 0.768 0.293 1.061 0l7.36-7.36c0.293-0.293 0.293-0.768 0-1.061s-0.768-0.293-1.061 0l-6.829 6.83z"></path>
+                        </svg>
+                      </span>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
+            {/each}
+          {:else}
+            {#each displayOptions as option, index (option.__isCreate__ ? `create-${option.value}` : getOptionValue(option))}
+              <div
+                class="option"
+                class:selected={!option.__isCreate__ && isSelected(option)}
+                class:highlighted={index === highlightedIndex}
+                class:disabled={!option.__isCreate__ && isOptionDisabled(option)}
+                class:create-option={option.__isCreate__}
+                class:hidden={!option.__isCreate__ && hideSelectedOptions && isSelected(option)}
+                on:click={() => selectOption(option)}
+                on:keydown={(e) => e.key === 'Enter' && selectOption(option)}
+                on:mouseenter={() => highlightedIndex = index}
+                role="option"
+                tabindex="-1"
+                aria-selected={!option.__isCreate__ && isSelected(option)}
+                aria-disabled={!option.__isCreate__ && isOptionDisabled(option)}
+                in:fly="{{ y: -5, duration: 150, delay: Math.min(index * 15, 300) }}"
+              >
+                {#if multiple && !option.__isCreate__}
+                  <input
+                    type="checkbox"
+                    checked={isSelected(option)}
+                    disabled={isOptionDisabled(option)}
+                    tabindex="-1"
+                    aria-hidden="true"
+                  />
+                {/if}
+                {#if showOptionIcons && option.icon && !option.__isCreate__}
+                  <span class="option-icon">
+                    {#if typeof option.icon === 'string'}
+                      <img src={option.icon} alt="" class="option-icon-img" />
+                    {:else}
+                      {@html option.icon}
+                    {/if}
+                  </span>
+                {/if}
+                <div class="option-content">
+                  <span class="option-label">
+                    {#if option.__isCreate__}
+                      {formatCreateLabel(option.value)}
+                    {:else}
+                      {getOptionLabel(option)}
+                    {/if}
+                  </span>
+                  {#if option.description && !option.__isCreate__}
+                    <span class="option-description">{option.description}</span>
+                  {/if}
+                </div>
+                {#if showOptionBadges && option.badge && !option.__isCreate__}
+                  <span class="option-badge" style="background-color: {option.badgeColor || '#E5E7EB'}">
+                    {option.badge}
+                  </span>
+                {/if}
+                {#if !option.__isCreate__ && isSelected(option)}
+                  <span class="check-icon">
+                    <svg width="16" height="16" viewBox="0 0 20 20">
+                      <path d="M7.629 12.173l-2.83-2.83c-0.293-0.293-0.768-0.293-1.061 0s-0.293 0.768 0 1.061l3.36 3.36c0.293 0.293 0.768 0.293 1.061 0l7.36-7.36c0.293-0.293 0.293-0.768 0-1.061s-0.768-0.293-1.061 0l-6.829 6.83z"></path>
+                    </svg>
+                  </span>
+                {/if}
+              </div>
+            {/each}
+          {/if}
         {/if}
       </div>
     </div>
@@ -577,29 +733,30 @@
     justify-content: space-between;
     padding: 8px 12px;
     background: #ffffff;
-    border: 1px solid #cccccc;
-    border-radius: 8px;
+    border: 1.5px solid #D1D5DB;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 38px;
     gap: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .select-trigger:hover:not(.disabled) {
-    border-color: #b3b3b3;
+    border-color: #9CA3AF;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   }
 
   .select-trigger:focus,
   .select-trigger.focused {
     outline: none;
     border-color: #2684FF;
-    box-shadow: 0 0 0 1px #2684FF;
+    box-shadow: 0 0 0 3px rgba(38, 132, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .select-trigger.open {
     border-color: #2684FF;
-    box-shadow: 0 0 0 1px #2684FF;
+    box-shadow: 0 0 0 3px rgba(38, 132, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .select-value {
@@ -632,14 +789,16 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 6px;
+    padding: 4px 8px;
     background: #E6F2FF;
     color: #0052CC;
-    border-radius: 3px;
-    font-size: 0.9em;
+    border-radius: 6px;
+    font-size: 0.875em;
+    font-weight: 500;
     white-space: nowrap;
     border: 1px solid #CCE0FF;
     animation: tagEnter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   @keyframes tagEnter {
@@ -754,13 +913,17 @@
     top: calc(100% + 8px);
     left: 0;
     right: 0;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    box-shadow:
+      0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04),
+      0 0 0 1px rgba(0, 0, 0, 0.05);
     z-index: 1000;
     overflow: hidden;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
   }
 
   .dropdown.fixed {
@@ -817,14 +980,126 @@
     background: #b3b3b3;
   }
 
-  .option {
+  /* Select All Container */
+  .select-all-container {
+    padding: 8px;
+    border-bottom: 1px solid #E5E7EB;
+    background: #F9FAFB;
+  }
+
+  .select-all-button {
+    width: 100%;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 6px 8px;
+    background: white;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s;
+    font-size: inherit;
+    color: inherit;
+    font-family: inherit;
+  }
+
+  .select-all-button:hover {
+    background: #F3F4F6;
+    border-color: #9CA3AF;
+  }
+
+  .select-all-button input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #2684FF;
+  }
+
+  .select-all-text {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+  }
+
+  .select-all-count {
+    color: #6B7280;
+    font-size: 0.9em;
+  }
+
+  /* Option Groups */
+  .option-group {
+    margin: 4px 0;
+  }
+
+  .option-group-label {
+    padding: 8px 12px 4px;
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #F9FAFB;
+    border-bottom: 1px solid #E5E7EB;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .option-group .option {
+    padding-left: 20px;
+  }
+
+  /* Options */
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    min-height: 40px;
+  }
+
+  /* Option Content */
+  .option-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  /* Option Icons */
+  .option-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #F3F4F6;
+  }
+
+  .option-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Option Badges */
+  .option-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 500;
+    color: #374151;
+    background: #E5E7EB;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .option:hover:not(.disabled):not(.create-option) {
@@ -869,20 +1144,21 @@
   }
 
   .option-label {
-    flex: 1;
+    font-weight: 500;
+    color: #1F2937;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    line-height: 1.4;
   }
 
   .option-description {
-    font-size: 0.85em;
-    color: #999999;
-    display: block;
-    margin-top: 2px;
+    font-size: 0.875em;
+    color: #6B7280;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    line-height: 1.3;
   }
 
   .check-icon {

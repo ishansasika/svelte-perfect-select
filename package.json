@@ -1,15 +1,25 @@
 {
   "name": "svelte-perfect-select",
   "private": false,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "description": "A modern, feature-rich select component for Svelte with react-select API compatibility, color themes, and enhanced animations",
   "main": "index.js",
+  "module": "index.js",
   "svelte": "src/lib/Select.svelte",
+  "types": "src/lib/Select.svelte.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/lib/Select.svelte.d.ts",
+      "svelte": "./src/lib/Select.svelte",
+      "default": "./index.js"
+    }
+  },
   "files": [
     "src/lib",
     "index.js",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "dev": "vite",
