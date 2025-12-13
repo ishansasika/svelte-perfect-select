@@ -1,0 +1,148 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.1.0] - 2024-12-13
+
+### 🎉 Major New Features
+
+#### Select All / Deselect All
+- Added `showSelectAll` prop to enable Select All button in multi-select mode
+- Added `selectAllText` and `deselectAllText` props for customization
+- Shows count of selected items (e.g., "5/10")
+- New change actions: `'select-all'` and `'deselect-all'`
+
+#### Option Grouping
+- Fully implemented option grouping with `isGrouped` prop
+- Added `groupBy` function prop to define grouping logic
+- Sticky group headers while scrolling
+- Visual hierarchy with styled group labels
+- Works seamlessly with all other features
+
+#### Icons in Options
+- Added `showOptionIcons` prop to enable icon support
+- Options can now have `icon` property (SVG string or image URL)
+- 32x32px icon containers with rounded corners
+- Automatic image scaling and centering
+- Icons appear before option labels
+
+#### Badges in Options
+- Added `showOptionBadges` prop to enable badge display
+- Options can have `badge` and `badgeColor` properties
+- Pill-shaped badges positioned at option end
+- Perfect for showing status, roles, or categories
+- Custom colors per badge
+
+### ✨ Enhanced Styling
+
+- **Modern Dropdown Design**
+  - Enhanced box-shadow with multi-layer depth
+  - Backdrop blur effect (12px) with 180% saturation
+  - Improved border-radius (12px) for modern look
+  - Semi-transparent background (rgba(255, 255, 255, 0.98))
+
+- **Improved Trigger**
+  - Thicker border (1.5px) for better definition
+  - Enhanced focus state with 3px glow ring
+  - Smooth transitions on all states
+  - Better hover feedback
+
+- **Better Tags**
+  - Increased padding (4px 8px) for touch targets
+  - Added subtle box-shadow
+  - Improved font-weight (500) for readability
+  - Larger border-radius (6px)
+
+- **Option Improvements**
+  - Increased min-height (40px) for better touch targets
+  - Enhanced spacing and gap (10px)
+  - Better option content structure with flex layout
+  - Improved typography with better line-heights
+
+### 🎨 Visual Enhancements
+
+- Enhanced animations with optimized delays
+- Better staggered entrance animations for options
+- Improved color contrast for better accessibility
+- Modern color palette for all UI elements
+
+### 📱 Better UX
+
+- Added `emptyStateText` prop for customizing no-options message
+- Added `emptySearchText` prop for no-results message
+- Separate empty states for no options vs no search results
+- Better disabled state styling
+- Improved RTL support
+
+### 🚀 Performance
+
+- Optimized filtering with cached lowercase search terms
+- Added null-safety checks in filter function
+- Better initial state handling
+- Reduced unnecessary re-renders
+
+### 📚 Documentation
+
+- Created comprehensive `ADVANCED_FEATURES.md` guide
+- Updated demo app with all new features showcased
+- Added TypeScript definitions for all new props and interfaces
+- Enhanced inline code documentation
+
+### 🐛 Bug Fixes
+
+- Fixed type safety in groupBy function
+- Improved option content layout structure
+- Better handling of edge cases in empty states
+
+### 💪 Developer Experience
+
+- Full TypeScript support for all new features
+- Updated type definitions with proper generics
+- Better prop descriptions in IntelliSense
+- Comprehensive examples in demo app
+
+## [2.0.1] - 2024-12-13
+
+### Added
+- TypeScript definitions for better developer experience
+- LICENSE file (MIT)
+- CHANGELOG.md for tracking changes
+- .npmignore file for better npm package management
+- Proper package.json exports field for modern module resolution
+
+### Fixed
+- `containerSize` default value changed from "medium" to "md" to match valid size options
+
+### Changed
+- Updated package.json with proper types, module, and exports fields
+
+## [2.0.0] - 2024-12-13
+
+### Added
+- React-Select API compatibility
+- Modern UI with enhanced animations
+- 7 beautiful color themes (blue, purple, green, red, orange, pink, dark)
+- 5 font size variants (smaller, small, medium, large, larger)
+- 5 container size variants (xs, sm, md, lg, xl)
+- Async loading with caching support
+- Creatable options functionality
+- Multi-select mode with animated tag chips
+- Search/filter functionality
+- Keyboard navigation support
+- Accessibility features (ARIA labels, screen reader support)
+- RTL language support
+- Custom styles support
+- Menu positioning options
+- Form compatibility
+
+### Changed
+- Upgraded to v2 with complete rewrite
+- Enhanced animations and transitions
+- Improved accessibility
+
+## [1.x] - Previous Versions
+
+Earlier versions of svelte-perfect-select. See git history for details.

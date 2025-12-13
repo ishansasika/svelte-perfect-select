@@ -14,7 +14,11 @@ A modern, feature-rich, and fully accessible select component for Svelte applica
 - **Keyboard Navigation** - Full keyboard support (Arrow keys, Enter, Escape, Tab, Backspace)
 - **Accessibility** - ARIA labels and comprehensive screen reader support
 
-### Advanced Features
+### Advanced Features (v2.1.0+)
+- **Select All / Deselect All** - One-click selection for multi-select mode
+- **Option Grouping** - Organize options into categories with sticky headers
+- **Icons in Options** - Add visual elements (SVG or images) to options
+- **Badges in Options** - Display status, roles, or categories with custom colors
 - **Color Themes** - 7 beautiful color themes: blue, purple, green, red, orange, pink, dark
 - **Container Sizing** - 5 physical container sizes: xs, sm, md, lg, xl
 - **Font Sizing** - 5 font size variants: smaller (11px), small (13px), medium (14px), large (16px), larger (18px)
@@ -26,7 +30,7 @@ A modern, feature-rich, and fully accessible select component for Svelte applica
 - **Menu Positioning** - Auto, top, or bottom placement with fixed positioning support
 - **Form Compatible** - Works seamlessly with native HTML forms
 - **Enhanced Animations** - Smooth dropdown animations, staggered options, and tag transitions
-- **Modern UI** - Beautiful design with enhanced shadows, backdrop effects, and rounded corners
+- **Modern UI** - Beautiful design with enhanced shadows, backdrop blur effects, and rounded corners
 
 ## Installation
 
@@ -500,6 +504,28 @@ The component uses scoped CSS with modern styling out of the box. You can custom
 - Firefox (latest)
 - Safari (latest)
 - Mobile browsers (iOS Safari, Chrome Mobile)
+
+## TypeScript Support
+
+This package includes TypeScript definitions out of the box. No need to install separate `@types` packages.
+
+```typescript
+import Select, { type SelectOption, type SelectProps } from 'svelte-perfect-select';
+
+const options: SelectOption[] = [
+  { id: '1', label: 'Option 1', value: '1' },
+  { id: '2', label: 'Option 2', value: '2' }
+];
+
+let selectedValue: string | null = null;
+```
+
+## 📚 Documentation
+
+For detailed guides and advanced features, check out the [documentation](./docs):
+
+- **[Advanced Features Guide](./docs/advanced-features.md)** - Select All, Grouping, Icons, Badges, and more
+- **[Contributing Guide](./docs/CONTRIBUTING.md)** - How to contribute to the project
 
 ## Accessibility
 

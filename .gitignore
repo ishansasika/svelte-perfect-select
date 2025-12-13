@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Private documentation (internal notes, not for public repo)
+.docs/
