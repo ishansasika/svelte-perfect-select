@@ -36,7 +36,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ishansasika/svelte-perfect-select"
+    "url": "git+https://github.com/ishansasika/svelte-perfect-select.git"
   },
   "keywords": [
     "svelte",
