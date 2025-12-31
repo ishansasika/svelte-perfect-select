@@ -574,13 +574,16 @@
                     in:fly="{{ y: -5, duration: 150, delay: index * 15 }}"
                   >
                     {#if multiple}
-                      <input
-                        type="checkbox"
-                        checked={isSelected(option)}
-                        disabled={isOptionDisabled(option)}
-                        tabindex="-1"
-                        aria-hidden="true"
-                      />
+                      {#key value}
+                        <input
+                          type="checkbox"
+                          checked={isSelected(option)}
+                          on:click|preventDefault
+                          disabled={isOptionDisabled(option)}
+                          tabindex="-1"
+                          aria-hidden="true"
+                        />
+                      {/key}
                     {/if}
                     {#if showOptionIcons && option.icon}
                       <span class="option-icon">
@@ -632,13 +635,16 @@
                 in:fly="{{ y: -5, duration: 150, delay: Math.min(index * 15, 300) }}"
               >
                 {#if multiple && !option.__isCreate__}
-                  <input
-                    type="checkbox"
-                    checked={isSelected(option)}
-                    disabled={isOptionDisabled(option)}
-                    tabindex="-1"
-                    aria-hidden="true"
-                  />
+                  {#key value}
+                    <input
+                      type="checkbox"
+                      checked={isSelected(option)}
+                      on:click|preventDefault
+                      disabled={isOptionDisabled(option)}
+                      tabindex="-1"
+                      aria-hidden="true"
+                    />
+                  {/key}
                 {/if}
                 {#if showOptionIcons && option.icon && !option.__isCreate__}
                   <span class="option-icon">
