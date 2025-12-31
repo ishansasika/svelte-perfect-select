@@ -25,3 +25,12 @@ dist-ssr
 
 # Private documentation (internal notes, not for public repo)
 .docs/
+
+# Demo build files
+demo/.svelte-kit/
+demo/build/
+demo/node_modules/
+
+# Build artifacts
+*.tgz
+*.zip

@@ -17,6 +17,10 @@ jsconfig.json
 # Documentation (GitHub only, not in npm package)
 docs/
 .docs/
+CHANGELOG.md
+
+# Demo directory
+demo/
 
 # Git
 .git/
@@ -38,6 +42,8 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+*.tgz
+*.zip
 
 # HTML entry point (for demo only)
 index.html
