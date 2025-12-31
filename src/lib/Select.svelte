@@ -184,15 +184,19 @@
     (!isLoadingAsync || allowCreateWhileLoading);
 
   // Group options if groupBy is provided
-  $: groupedOptions = groupBy && isGrouped && typeof groupBy === 'function'
-    ? filteredOptions.reduce((groups, option) => {
-        const groupKey = groupBy(option);
-        if (!groups[groupKey]) {
-          groups[groupKey] = [];
-        }
-        groups[groupKey].push(option);
-        return groups;
-      }, {})
+  function groupOptions(opts, groupFn) {
+    return opts.reduce((groups, option) => {
+      const groupKey = groupFn(option);
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(option);
+      return groups;
+    }, {});
+  }
+
+  $: groupedOptions = isGrouped && groupBy && typeof groupBy === 'function'
+    ? groupOptions(filteredOptions, groupBy)
     : null;
 
   $: displayOptions = showCreateOption
