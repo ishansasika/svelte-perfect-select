@@ -32,6 +32,14 @@ A modern, feature-rich, and fully accessible select component for Svelte applica
 - **Enhanced Animations** - Smooth dropdown animations, staggered options, and tag transitions
 - **Modern UI** - Beautiful design with enhanced shadows, backdrop blur effects, and rounded corners
 
+### New in v2.2.0
+- **Max Selection Limit** - Limit the number of selections in multi-select mode
+- **Tag Overflow Display** - Show limited tags with "+X more" badge
+- **Validation States** - Built-in error, success, and warning states with messages
+- **Configurable Checkboxes** - Optional checkboxes for multi-select options
+- **Portal Rendering** - Render dropdown in a portal to solve z-index issues
+- **Infinite Scroll** - Load more options on scroll for large async datasets
+
 ## Installation
 
 Install using npm:
@@ -140,6 +148,23 @@ pnpm add svelte-perfect-select
 | `tabSelectsValue` | `boolean` | `true` | Select highlighted option on Tab |
 | `backspaceRemovesValue` | `boolean` | `true` | Remove last value on Backspace in multi-select |
 | `escapeClearsValue` | `boolean` | `false` | Clear value on Escape |
+
+### v2.2.0 Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `maxSelected` | `number` | `null` | Maximum number of selections allowed in multi-select mode |
+| `maxSelectedMessage` | `Function` | `(max) => "Maximum ${max} items can be selected"` | Message when max selections reached |
+| `maxTagsDisplay` | `number` | `null` | Maximum tags to display before showing "+X more" |
+| `showTagCount` | `boolean` | `true` | Show "+X more" badge when tags exceed maxTagsDisplay |
+| `validationState` | `string` | `null` | Validation state: `"error"`, `"success"`, `"warning"`, or `null` |
+| `validationMessage` | `string` | `""` | Validation message to display below the select |
+| `showCheckboxes` | `boolean` | `false` | Show checkboxes for multi-select options |
+| `usePortal` | `boolean` | `false` | Render dropdown in a portal (document.body) |
+| `portalTarget` | `HTMLElement` | `null` | Custom portal target element |
+| `loadMoreOptions` | `Function` | `null` | Function for infinite scroll: `() => Promise<options>` |
+| `hasMore` | `boolean` | `false` | Whether more options are available for infinite scroll |
+| `loadingMore` | `boolean` | `false` | Loading state for infinite scroll |
 
 ## Option Object Structure
 
@@ -478,6 +503,196 @@ pnpm add svelte-perfect-select
 </script>
 
 <Select {options} isDisabled={true} placeholder="This is disabled..." />
+```
+
+### Max Selection Limit (v2.2.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let selectedItems = [];
+  let options = [
+    {id: '1', label: 'Option 1', value: '1'},
+    {id: '2', label: 'Option 2', value: '2'},
+    {id: '3', label: 'Option 3', value: '3'},
+    {id: '4', label: 'Option 4', value: '4'},
+    {id: '5', label: 'Option 5', value: '5'}
+  ];
+
+  function handleMaxSelected(event) {
+    console.log(event.detail.message);
+  }
+</script>
+
+<!-- Limit selection to 3 items -->
+<Select
+  {options}
+  bind:value={selectedItems}
+  isMulti={true}
+  maxSelected={3}
+  maxSelectedMessage={(max) => `You can only select up to ${max} items`}
+  on:maxSelected={handleMaxSelected}
+  placeholder="Select up to 3 items..."
+/>
+```
+
+### Tag Overflow Display (v2.2.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let selectedSkills = [];
+  let skills = [
+    {id: 'js', label: 'JavaScript', value: 'js'},
+    {id: 'ts', label: 'TypeScript', value: 'ts'},
+    {id: 'py', label: 'Python', value: 'py'},
+    {id: 'go', label: 'Go', value: 'go'},
+    {id: 'rust', label: 'Rust', value: 'rust'},
+    {id: 'java', label: 'Java', value: 'java'}
+  ];
+</script>
+
+<!-- Show only 3 tags, rest as "+X more" -->
+<Select
+  options={skills}
+  bind:value={selectedSkills}
+  isMulti={true}
+  maxTagsDisplay={3}
+  placeholder="Select skills..."
+/>
+```
+
+### Validation States (v2.2.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let selectedCountry = null;
+  let countries = [
+    {id: 'us', label: 'United States', value: 'us'},
+    {id: 'uk', label: 'United Kingdom', value: 'uk'},
+    {id: 'ca', label: 'Canada', value: 'ca'}
+  ];
+</script>
+
+<!-- Error state -->
+<Select
+  options={countries}
+  bind:value={selectedCountry}
+  validationState="error"
+  validationMessage="Please select a country"
+  placeholder="Select country..."
+/>
+
+<!-- Success state -->
+<Select
+  options={countries}
+  bind:value={selectedCountry}
+  validationState="success"
+  validationMessage="Country selected successfully"
+  placeholder="Select country..."
+/>
+
+<!-- Warning state -->
+<Select
+  options={countries}
+  bind:value={selectedCountry}
+  validationState="warning"
+  validationMessage="This country may have shipping restrictions"
+  placeholder="Select country..."
+/>
+```
+
+### Checkboxes in Multi-Select (v2.2.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let selectedFeatures = [];
+  let features = [
+    {id: '1', label: 'Feature A', value: 'a'},
+    {id: '2', label: 'Feature B', value: 'b'},
+    {id: '3', label: 'Feature C', value: 'c'}
+  ];
+</script>
+
+<!-- Show checkboxes for better visual feedback -->
+<Select
+  options={features}
+  bind:value={selectedFeatures}
+  isMulti={true}
+  showCheckboxes={true}
+  placeholder="Select features..."
+/>
+```
+
+### Infinite Scroll (v2.2.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let selectedUser = null;
+  let users = [];
+  let page = 0;
+  let hasMoreUsers = true;
+
+  async function loadInitialUsers(searchTerm) {
+    page = 0;
+    const response = await fetch(`/api/users?search=${searchTerm}&page=${page}`);
+    const data = await response.json();
+    hasMoreUsers = data.hasMore;
+    return data.users.map(user => ({
+      id: user.id,
+      label: user.name,
+      value: user.id
+    }));
+  }
+
+  async function loadMoreUsers() {
+    page += 1;
+    const response = await fetch(`/api/users?page=${page}`);
+    const data = await response.json();
+    hasMoreUsers = data.hasMore;
+    return data.users.map(user => ({
+      id: user.id,
+      label: user.name,
+      value: user.id
+    }));
+  }
+</script>
+
+<!-- Infinite scroll for large datasets -->
+<Select
+  bind:value={selectedUser}
+  loadOptions={loadInitialUsers}
+  loadMoreOptions={loadMoreUsers}
+  hasMore={hasMoreUsers}
+  defaultOptions={true}
+  placeholder="Search users..."
+/>
+```
+
+### Portal Rendering (v2.2.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+  let options = [{id: '1', label: 'Option 1', value: '1'}];
+</script>
+
+<!-- Render dropdown in portal to avoid z-index issues -->
+<div style="overflow: hidden; position: relative; z-index: 1;">
+  <Select
+    {options}
+    usePortal={true}
+    placeholder="Dropdown renders in portal..."
+  />
+</div>
 ```
 
 ## Keyboard Navigation
