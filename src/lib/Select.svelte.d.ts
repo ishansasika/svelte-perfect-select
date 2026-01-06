@@ -387,6 +387,80 @@ export interface SelectProps {
    * @default () => "Loading..."
    */
   loadingMessage?: () => string;
+
+  // v2.2.0 Features
+
+  /**
+   * Maximum number of selections allowed in multi-select mode
+   * @default null (unlimited)
+   */
+  maxSelected?: number | null;
+
+  /**
+   * Message to display when max selections reached
+   * @default (max) => `Maximum ${max} items can be selected`
+   */
+  maxSelectedMessage?: (max: number) => string;
+
+  /**
+   * Maximum number of tags to display before showing "+X more"
+   * @default null (show all)
+   */
+  maxTagsDisplay?: number | null;
+
+  /**
+   * Show "+X more" badge when tags exceed maxTagsDisplay
+   * @default true
+   */
+  showTagCount?: boolean;
+
+  /**
+   * Validation state: 'error', 'success', 'warning', or null
+   * @default null
+   */
+  validationState?: 'error' | 'success' | 'warning' | null;
+
+  /**
+   * Validation message to display below the select
+   * @default ""
+   */
+  validationMessage?: string;
+
+  /**
+   * Show checkboxes for multi-select options
+   * @default false
+   */
+  showCheckboxes?: boolean;
+
+  /**
+   * Render dropdown in a portal (document.body or custom target)
+   * @default false
+   */
+  usePortal?: boolean;
+
+  /**
+   * Custom portal target element (defaults to document.body)
+   * @default null
+   */
+  portalTarget?: HTMLElement | null;
+
+  /**
+   * Function for infinite scroll pagination
+   * @default null
+   */
+  loadMoreOptions?: (() => Promise<SelectOption[]>) | null;
+
+  /**
+   * Whether more options are available for infinite scroll
+   * @default false
+   */
+  hasMore?: boolean;
+
+  /**
+   * Loading state for infinite scroll
+   * @default false
+   */
+  loadingMore?: boolean;
 }
 
 export interface SelectEvents {
@@ -439,6 +513,11 @@ export interface SelectEvents {
    * Fired when async loading fails
    */
   loadError: CustomEvent<SelectLoadErrorEvent>;
+
+  /**
+   * Fired when max selection limit is reached (v2.2.0)
+   */
+  maxSelected: CustomEvent<{ max: number; message: string }>;
 }
 
 export default class Select extends SvelteComponentTyped<
