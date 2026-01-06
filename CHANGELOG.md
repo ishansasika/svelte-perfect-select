@@ -5,6 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-01-06
+
+### 🎉 Major New Features
+
+#### Max Selection Limit
+- Added `maxSelected` prop to limit the number of selections in multi-select mode
+- Added `maxSelectedMessage` function prop to customize the warning message
+- Automatically shows a dismissible warning when limit is reached
+- Dispatches `maxSelected` event with limit details
+- Prevents selection when limit is reached while allowing deselection
+
+#### Tag Overflow Display
+- Added `maxTagsDisplay` prop to limit visible tags with overflow indicator
+- Added `showTagCount` prop to toggle "+X more" badge display
+- Shows "+X more" badge when selected items exceed the display limit
+- Improves UI for multi-select with many selections
+- Automatically calculates and displays overflow count
+
+#### Validation States
+- Added `validationState` prop with 'error', 'success', and 'warning' states
+- Added `validationMessage` prop for displaying validation feedback
+- Visual styling for each validation state (border colors and message styling)
+- Animated validation message with icon indicators
+- Perfect for form validation feedback
+
+#### Configurable Checkboxes
+- Added `showCheckboxes` prop to toggle checkbox display in multi-select
+- Checkboxes now optional instead of always shown
+- Better visual feedback for multi-select mode when enabled
+- Maintains accessibility with proper ARIA attributes
+
+#### Portal Rendering
+- Added `usePortal` prop to render dropdown in a portal
+- Added `portalTarget` prop for custom portal target element
+- Solves z-index and overflow issues in complex layouts
+- Dropdown can escape container boundaries when needed
+
+#### Infinite Scroll
+- Added `loadMoreOptions` function prop for pagination
+- Added `hasMore` prop to indicate more options availability
+- Added `loadingMore` state prop for loading indicator
+- Automatically loads more options when scrolling near bottom
+- Loading indicator appears while fetching additional options
+- Perfect for large async datasets with pagination
+
+### ✨ Enhanced Developer Experience
+
+- Updated TypeScript definitions for all new features
+- Added comprehensive examples in README for each new feature
+- New event: `maxSelected` dispatched when selection limit reached
+- All new props properly typed and documented
+
+### 📚 Documentation
+
+- Added v2.2.0 features section to README
+- Added detailed examples for all 6 new features
+- Updated props tables with new v2.2.0 properties
+- Added TypeScript event interface for `maxSelected`
+
+### 🎨 Visual Enhancements
+
+- New warning-styled badge for tag overflow indicator
+- Color-coded validation messages with icons
+- Smooth animations for validation messages and warnings
+- Improved loading indicator for infinite scroll
+
 ## [2.1.1] - 2025-12-31
 
 ### 🐛 Bug Fixes
