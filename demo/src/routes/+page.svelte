@@ -49,6 +49,30 @@
 			icon: '♿',
 			title: 'Fully Accessible',
 			description: 'ARIA labels, keyboard navigation, screen reader support'
+		},
+		{
+			icon: '🚀',
+			title: 'Max Selection Limit',
+			description: 'Limit selections in multi-select with warnings (v2.2.0)',
+			isNew: true
+		},
+		{
+			icon: '✅',
+			title: 'Validation States',
+			description: 'Built-in error, success, warning states (v2.2.0)',
+			isNew: true
+		},
+		{
+			icon: '🎪',
+			title: 'Portal Rendering',
+			description: 'Solve z-index issues with portal mode (v2.2.0)',
+			isNew: true
+		},
+		{
+			icon: '∞',
+			title: 'Infinite Scroll',
+			description: 'Load more options on scroll for pagination (v2.2.0)',
+			isNew: true
 		}
 	];
 </script>
@@ -99,8 +123,17 @@
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 			{#each features as feature}
 				<div
-					class="text-center p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow"
+					class="text-center p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow relative"
+					class:border-purple-300={feature.isNew}
+					class:bg-purple-50={feature.isNew}
 				>
+					{#if feature.isNew}
+						<span
+							class="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-semibold"
+						>
+							NEW
+						</span>
+					{/if}
 					<div class="text-4xl mb-4">{feature.icon}</div>
 					<h3 class="text-lg font-semibold mb-2">{feature.title}</h3>
 					<p class="text-gray-600 text-sm">{feature.description}</p>

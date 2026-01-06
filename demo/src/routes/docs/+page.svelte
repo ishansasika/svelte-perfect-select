@@ -141,6 +141,15 @@
 						<td class="px-6 py-4 font-mono text-sm text-gray-600">{'{ options }'}</td>
 						<td class="px-6 py-4 text-sm text-gray-600">Fired when async options are loaded</td>
 					</tr>
+					<tr class="bg-purple-50">
+						<td class="px-6 py-4 font-mono text-sm text-blue-600">
+							maxSelected <span class="text-xs text-purple-600 ml-1">v2.2.0</span>
+						</td>
+						<td class="px-6 py-4 font-mono text-sm text-gray-600">{'{ max, message }'}</td>
+						<td class="px-6 py-4 text-sm text-gray-600">
+							Fired when max selection limit is reached
+						</td>
+					</tr>
 				</tbody>
 			</table>
 		</div>
@@ -178,6 +187,92 @@
 					code={`<Select bind:value loadOptions={loadCountries} />`}
 					language="svelte"
 				/>
+			</div>
+
+			<!-- v2.2.0 Examples -->
+			<div class="mt-12">
+				<h3 class="text-2xl font-bold mb-6 text-purple-600">New in v2.2.0</h3>
+
+				<div class="space-y-8">
+					<div>
+						<h4 class="text-lg font-semibold mb-4">Max Selection Limit</h4>
+						<CodeBlock
+							code={`<Select
+  {options}
+  bind:value
+  isMulti={true}
+  maxSelected={3}
+  on:maxSelected={(e) => console.log(e.detail.message)}
+/>`}
+							language="svelte"
+						/>
+					</div>
+
+					<div>
+						<h4 class="text-lg font-semibold mb-4">Tag Overflow Display</h4>
+						<CodeBlock
+							code={`<Select
+  {options}
+  bind:value
+  isMulti={true}
+  maxTagsDisplay={3}
+  showTagCount={true}
+/>`}
+							language="svelte"
+						/>
+					</div>
+
+					<div>
+						<h4 class="text-lg font-semibold mb-4">Validation States</h4>
+						<CodeBlock
+							code={`<Select
+  {options}
+  bind:value
+  validationState="error"
+  validationMessage="Please select a country"
+/>`}
+							language="svelte"
+						/>
+					</div>
+
+					<div>
+						<h4 class="text-lg font-semibold mb-4">Checkboxes in Multi-Select</h4>
+						<CodeBlock
+							code={`<Select
+  {options}
+  bind:value
+  isMulti={true}
+  showCheckboxes={true}
+/>`}
+							language="svelte"
+						/>
+					</div>
+
+					<div>
+						<h4 class="text-lg font-semibold mb-4">Portal Rendering</h4>
+						<CodeBlock
+							code={`<Select
+  {options}
+  bind:value
+  usePortal={true}
+/>`}
+							language="svelte"
+						/>
+					</div>
+
+					<div>
+						<h4 class="text-lg font-semibold mb-4">Infinite Scroll</h4>
+						<CodeBlock
+							code={`<Select
+  bind:value
+  loadOptions={loadInitialUsers}
+  loadMoreOptions={loadMoreUsers}
+  hasMore={hasMoreUsers}
+/>`}
+							language="svelte"
+						/>
+					</div>
+				</div>
 			</div>
 		</div>
 
