@@ -60,6 +60,20 @@
   export let emptyStateText = "No options available";
   export let emptySearchText = "No results found";
 
+  // v2.2.0 Features
+  export let maxSelected = null; // Maximum number of selections allowed in multi-select
+  export let maxSelectedMessage = (max) => `Maximum ${max} items can be selected`;
+  export let maxTagsDisplay = null; // Maximum tags to display before showing "+X more"
+  export let showTagCount = true; // Show "+X more" when tags exceed maxTagsDisplay
+  export let validationState = null; // 'error', 'success', 'warning', or null
+  export let validationMessage = ""; // Validation message to display
+  export let showCheckboxes = false; // Show checkboxes for multi-select options
+  export let usePortal = false; // Render dropdown in a portal (body)
+  export let portalTarget = null; // Custom portal target element (defaults to body)
+  export let loadMoreOptions = null; // Function for infinite scroll: () => Promise<options>
+  export let hasMore = false; // Whether more options are available for infinite scroll
+  export let loadingMore = false; // Loading state for infinite scroll
+
   // Misc
   export let name = "svelte-perfect-select";
   export let id = "svelte-perfect-select";
@@ -97,6 +111,9 @@
   let internalOptions = options.length > 0 ? [...options] : [];
   let optionsCache = {};
   let isLoadingAsync = false;
+  let portalElement = null;
+  let isLoadingMoreOptions = false;
+  let showMaxSelectionWarning = false;
 
   // Computed
   $: {
@@ -121,6 +138,27 @@
   $: displayText = multiple
     ? (value.length > 0 ? `${value.length} selected` : placeholder)
     : (selectedOptions ? getOptionLabel(selectedOptions) : placeholder);
+
+  // v2.2.0 Computed properties
+  $: visibleTags = maxTagsDisplay && selectedOptions.length > maxTagsDisplay
+    ? selectedOptions.slice(0, maxTagsDisplay)
+    : selectedOptions;
+
+  $: hiddenTagsCount = maxTagsDisplay && selectedOptions.length > maxTagsDisplay
+    ? selectedOptions.length - maxTagsDisplay
+    : 0;
+
+  $: isMaxSelectionReached = maxSelected && multiple && value.length >= maxSelected;
+
+  $: validationColors = {
+    error: { border: '#EF4444', shadow: 'rgba(239, 68, 68, 0.1)', text: '#DC2626' },
+    success: { border: '#10B981', shadow: 'rgba(16, 185, 129, 0.1)', text: '#059669' },
+    warning: { border: '#F59E0B', shadow: 'rgba(245, 158, 11, 0.1)', text: '#D97706' }
+  };
+
+  $: currentValidation = validationState && validationColors[validationState]
+    ? validationColors[validationState]
+    : null;
 
   $: if (options) {
     internalOptions = [...options];
@@ -245,9 +283,21 @@
     if (multiple) {
       const index = value.indexOf(optionValue);
       if (index > -1) {
+        // Deselecting - always allowed
         value = value.filter(v => v !== optionValue);
+        showMaxSelectionWarning = false;
       } else {
+        // Selecting - check max limit
+        if (maxSelected && value.length >= maxSelected) {
+          showMaxSelectionWarning = true;
+          dispatch('maxSelected', { max: maxSelected, message: maxSelectedMessage(maxSelected) });
+          setTimeout(() => {
+            showMaxSelectionWarning = false;
+          }, 3000);
+          return;
+        }
         value = hideSelectedOptions ? [...value, optionValue] : [...value, optionValue];
+        showMaxSelectionWarning = false;
       }
     } else {
       value = optionValue;
@@ -400,6 +450,38 @@
     dispatch('focus');
   }
 
+  // v2.2.0 Functions
+  async function handleInfiniteScroll(event) {
+    if (!loadMoreOptions || !hasMore || isLoadingMoreOptions) return;
+
+    const target = event.target;
+    const scrollThreshold = 50; // pixels from bottom
+
+    if (target.scrollHeight - target.scrollTop - target.clientHeight < scrollThreshold) {
+      isLoadingMoreOptions = true;
+      try {
+        const newOptions = await loadMoreOptions();
+        if (newOptions && newOptions.length > 0) {
+          internalOptions = [...internalOptions, ...newOptions];
+          dispatch('optionsLoaded', { options: newOptions });
+        }
+      } catch (error) {
+        dispatch('loadError', { error });
+      } finally {
+        isLoadingMoreOptions = false;
+      }
+    }
+  }
+
+  function createPortal() {
+    if (!usePortal) return;
+    portalElement = portalTarget || document.body;
+  }
+
+  function destroyPortal() {
+    portalElement = null;
+  }
+
   onMount(() => {
     document.addEventListener('click', handleClickOutside);
 
@@ -411,8 +493,11 @@
       handleLoadOptions('');
     }
 
+    createPortal();
+
     return () => {
       document.removeEventListener('click', handleClickOutside);
+      destroyPortal();
     };
   });
 
@@ -438,6 +523,9 @@
     class="select-trigger"
     class:open={isOpen}
     class:focused={isOpen}
+    class:validation-error={validationState === 'error'}
+    class:validation-success={validationState === 'success'}
+    class:validation-warning={validationState === 'warning'}
     on:click={() => openMenuOnClick && toggleDropdown()}
     on:keydown={handleKeydown}
     tabindex={disabled ? -1 : 0}
@@ -445,11 +533,12 @@
     aria-haspopup="listbox"
     aria-expanded={isOpen}
     aria-label={placeholder}
+    style="{currentValidation ? `border-color: ${currentValidation.border}; box-shadow: 0 0 0 3px ${currentValidation.shadow};` : ''} {customStyles.control || ''}"
   >
     <div class="select-value">
       {#if multiple && value.length > 0}
         <div class="tags">
-          {#each selectedOptions as option (getOptionValue(option))}
+          {#each visibleTags as option (getOptionValue(option))}
             <span class="tag" class:disabled in:scale="{{ duration: 200 }}" out:scale="{{ duration: 150 }}">
               <span class="tag-label">{getOptionLabel(option)}</span>
               {#if !disabled}
@@ -466,6 +555,11 @@
               {/if}
             </span>
           {/each}
+          {#if hiddenTagsCount > 0 && showTagCount}
+            <span class="tag tag-overflow" in:scale="{{ duration: 200 }}">
+              <span class="tag-label">+{hiddenTagsCount} more</span>
+            </span>
+          {/if}
         </div>
       {:else}
         <span class="placeholder" class:has-value={value && (!multiple || value.length > 0)}>
@@ -499,6 +593,32 @@
     </div>
   </div>
 
+  <!-- Validation Message -->
+  {#if validationMessage && validationState}
+    <div class="validation-message validation-{validationState}" in:fly="{{ y: -5, duration: 200 }}">
+      <svg width="14" height="14" viewBox="0 0 20 20" style="flex-shrink: 0;">
+        {#if validationState === 'error'}
+          <path fill="currentColor" d="M10 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6h2V5zm0 8h-2v2h2v-2z"/>
+        {:else if validationState === 'success'}
+          <path fill="currentColor" d="M10 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1.41-6.83L6.7 9.29 5.29 10.7l3.3 3.3 7-7-1.41-1.41-5.59 5.59z"/>
+        {:else}
+          <path fill="currentColor" d="M10 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13H9v7h2V5zm0 9H9v2h2v-2z"/>
+        {/if}
+      </svg>
+      <span>{validationMessage}</span>
+    </div>
+  {/if}
+
+  <!-- Max Selection Warning -->
+  {#if showMaxSelectionWarning && maxSelected}
+    <div class="max-selection-warning" in:fly="{{ y: -5, duration: 200 }}" out:fade="{{ duration: 150 }}">
+      <svg width="14" height="14" viewBox="0 0 20 20" style="flex-shrink: 0;">
+        <path fill="currentColor" d="M10 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13H9v7h2V5zm0 9H9v2h2v-2z"/>
+      </svg>
+      <span>{maxSelectedMessage(maxSelected)}</span>
+    </div>
+  {/if}
+
   {#if isOpen}
     <div
       class="dropdown {menuPlacement}"
@@ -525,7 +645,12 @@
         </div>
       {/if}
 
-      <div class="options-list" id="options-list" bind:this={menuRef}>
+      <div
+        class="options-list"
+        id="options-list"
+        bind:this={menuRef}
+        on:scroll={handleInfiniteScroll}
+      >
         {#if isLoadingAsync}
           <div class="loading-message">{loadingMessage()}</div>
         {:else if displayOptions.length === 0}
@@ -577,7 +702,7 @@
                     aria-disabled={isOptionDisabled(option)}
                     in:fly="{{ y: -5, duration: 150, delay: index * 15 }}"
                   >
-                    {#if multiple}
+                    {#if multiple && showCheckboxes}
                       {#key value}
                         <input
                           type="checkbox"
@@ -638,7 +763,7 @@
                 aria-disabled={!option.__isCreate__ && isOptionDisabled(option)}
                 in:fly="{{ y: -5, duration: 150, delay: Math.min(index * 15, 300) }}"
               >
-                {#if multiple && !option.__isCreate__}
+                {#if multiple && showCheckboxes && !option.__isCreate__}
                   {#key value}
                     <input
                       type="checkbox"
@@ -685,6 +810,14 @@
                 {/if}
               </div>
             {/each}
+          {/if}
+
+          <!-- Infinite Scroll Loading Indicator -->
+          {#if isLoadingMoreOptions}
+            <div class="loading-more-message">
+              <div class="spinner"></div>
+              <span>Loading more...</span>
+            </div>
           {/if}
         {/if}
       </div>
@@ -851,6 +984,15 @@
 
   .tag-remove svg {
     fill: currentColor;
+  }
+
+  /* v2.2.0 Tag Overflow */
+  .tag-overflow {
+    background: #9CA3AF !important;
+    color: white !important;
+    border-color: #6B7280 !important;
+    cursor: default;
+    font-weight: 600;
   }
 
   .select-actions {
@@ -1188,6 +1330,72 @@
     text-align: center;
     color: #999999;
     font-size: 0.95em;
+  }
+
+  /* v2.2.0 Validation States */
+  .select-trigger.validation-error {
+    border-color: #EF4444 !important;
+  }
+
+  .select-trigger.validation-success {
+    border-color: #10B981 !important;
+  }
+
+  .select-trigger.validation-warning {
+    border-color: #F59E0B !important;
+  }
+
+  .validation-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    border-radius: 6px;
+    font-size: 0.875em;
+    line-height: 1.4;
+  }
+
+  .validation-message.validation-error {
+    background: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+  }
+
+  .validation-message.validation-success {
+    background: #F0FDF4;
+    color: #059669;
+    border: 1px solid #BBF7D0;
+  }
+
+  .validation-message.validation-warning {
+    background: #FFFBEB;
+    color: #D97706;
+    border: 1px solid #FDE68A;
+  }
+
+  .max-selection-warning {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    border-radius: 6px;
+    font-size: 0.875em;
+    line-height: 1.4;
+    background: #FFFBEB;
+    color: #D97706;
+    border: 1px solid #FDE68A;
+  }
+
+  .loading-more-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    color: #6B7280;
+    font-size: 0.9em;
   }
 
   /* RTL Support */
