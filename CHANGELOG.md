@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2026-01-07
+
+### 🔧 Maintenance
+
+#### Dependency Updates
+- **Main Package**
+  - Updated `vite` from 5.4.20 to 5.4.21 (patch update)
+
+- **Demo Application**
+  - Updated `@sveltejs/kit` from 2.0.0 to 2.49.3 (significant update with improvements and bug fixes)
+  - Updated `@sveltejs/adapter-static` from 3.0.0 to 3.0.10 (patch updates)
+  - Updated `vite` from 5.4.20 to 5.4.21 (patch update)
+  - Updated `typescript` from 5.7.2 to 5.9.3 (minor update)
+  - Updated `svelte-check` from 4.0.0 to 4.3.5 (patch updates)
+
+### 📦 Technical Details
+
+- Maintained full compatibility with Svelte 4.x
+- All dependencies updated to latest Svelte 4-compatible versions
+- No breaking changes or API modifications
+- All builds passing successfully
+
 ## [2.2.0] - 2026-01-06
 
 ### 🎉 Major New Features
