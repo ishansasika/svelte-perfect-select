@@ -190,6 +190,103 @@ export const SELECT_METADATA: ComponentMetadata = {
 			description: 'Hide selected options from menu',
 			defaultValue: false,
 			category: 'behavior'
+		},
+		// v3.0.0 Features
+		{
+			name: 'enableVirtualScroll',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Enable virtual scrolling for large datasets (v3.0.0)',
+			defaultValue: true,
+			category: 'v3-features'
+		},
+		{
+			name: 'enableDragDrop',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Enable drag & drop tag reordering (v3.0.0)',
+			defaultValue: false,
+			category: 'v3-features'
+		},
+		{
+			name: 'commandPaletteMode',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Enable command palette mode (Cmd+K) (v3.0.0)',
+			defaultValue: false,
+			category: 'v3-features'
+		},
+		{
+			name: 'enableFuzzySearch',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Enable fuzzy search algorithm (v3.0.0)',
+			defaultValue: false,
+			category: 'v3-features'
+		},
+		{
+			name: 'fuzzySearchThreshold',
+			type: 'number',
+			control: { type: 'range', min: 0, max: 1, step: 0.1 },
+			description: 'Fuzzy match threshold (0-1) (v3.0.0)',
+			defaultValue: 0.6,
+			category: 'v3-features'
+		},
+		{
+			name: 'enableCopyPaste',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Enable copy/paste for multi-select (v3.0.0)',
+			defaultValue: true,
+			category: 'v3-features'
+		},
+		{
+			name: 'touchOptimized',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Enable touch optimizations (v3.0.0)',
+			defaultValue: true,
+			category: 'v3-features'
+		},
+		{
+			name: 'swipeToRemove',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Swipe tags to remove on mobile (v3.0.0)',
+			defaultValue: true,
+			category: 'v3-features'
+		},
+		{
+			name: 'collapsibleGroups',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Enable collapsible option groups (v3.0.0)',
+			defaultValue: false,
+			category: 'v3-features'
+		},
+		{
+			name: 'useSpringAnimations',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Use spring physics animations (v3.0.0)',
+			defaultValue: false,
+			category: 'v3-features'
+		},
+		{
+			name: 'enhancedAccessibility',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'WCAG AAA accessibility features (v3.0.0)',
+			defaultValue: true,
+			category: 'v3-features'
+		},
+		{
+			name: 'announceChanges',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Screen reader announcements (v3.0.0)',
+			defaultValue: true,
+			category: 'v3-features'
 		}
 	],
 	examples: [],
