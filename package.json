@@ -1,9 +1,9 @@
 {
   "name": "svelte-perfect-select",
   "private": false,
-  "version": "2.2.1",
+  "version": "3.0.0",
   "type": "module",
-  "description": "A modern, feature-rich select component for Svelte with react-select API compatibility, color themes, and enhanced animations",
+  "description": "A modern, feature-rich select component for Svelte 5 with react-select API compatibility, virtual scrolling, drag-drop, fuzzy search, and WCAG AAA accessibility",
   "main": "index.js",
   "module": "index.js",
   "svelte": "src/lib/Select.svelte",
@@ -27,12 +27,12 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^3.1.2",
-    "svelte": "^4.2.20",
-    "vite": "^5.4.21"
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "svelte": "^5.18.1",
+    "vite": "^6.0.7"
   },
   "peerDependencies": {
-    "svelte": "^4.0.0"
+    "svelte": "^5.0.0"
   },
   "repository": {
     "type": "git",
@@ -40,6 +40,7 @@
   },
   "keywords": [
     "svelte",
+    "svelte5",
     "select",
     "dropdown",
     "svelte select",
@@ -52,7 +53,13 @@
     "themes",
     "color themes",
     "accessible",
-    "a11y"
+    "a11y",
+    "wcag",
+    "virtual-scroll",
+    "drag-drop",
+    "fuzzy-search",
+    "command-palette",
+    "touch-optimized"
   ],
   "author": "Ishan Karunaratne <ishansasika@gmail.com> (https://ishansasika.dev)",
   "license": "MIT",
