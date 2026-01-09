@@ -1,94 +1,136 @@
 <script>
-  import { createEventDispatcher, onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { scale, fly, fade } from 'svelte/transition';
+  import { spring } from 'svelte/motion';
 
-  // Props - React-Select compatible + Enhanced
-  export let options = [];
-  export let value = undefined;
-  export let placeholder = "Select...";
-  export let isMulti = false;
-  export let multiple = isMulti; // Support both naming conventions
-  export let isSearchable = true;
-  export let searchable = isSearchable;
-  export let isClearable = true;
-  export let clearable = isClearable;
-  export let isDisabled = false;
-  export let disabled = isDisabled;
-  export let isLoading = false;
-  export let loading = isLoading;
-  export let isRtl = false;
-  export let closeMenuOnSelect = !multiple;
-  export let hideSelectedOptions = false;
-  export let isCreatable = false;
-  export let allowCreateWhileLoading = false;
-  export let createOptionPosition = 'last'; // 'first' or 'last'
-  export let formatCreateLabel = (inputValue) => `Create "${inputValue}"`;
+  // ========== PROPS - Svelte 5 Style ==========
+  let {
+    // Basic props
+    options = [],
+    value = $bindable(undefined),
+    placeholder = "Select...",
+    isMulti = false,
+    multiple = isMulti,
+    isSearchable = true,
+    searchable = isSearchable,
+    isClearable = true,
+    clearable = isClearable,
+    isDisabled = false,
+    disabled = isDisabled,
+    isLoading = false,
+    loading = isLoading,
+    isRtl = false,
+    closeMenuOnSelect = !multiple,
+    hideSelectedOptions = false,
+    isCreatable = false,
+    allowCreateWhileLoading = false,
+    createOptionPosition = 'last',
+    formatCreateLabel = (inputValue) => `Create "${inputValue}"`,
 
-  // Async support
-  export let loadOptions = null; // Function for async loading
-  export let cacheOptions = true;
-  export let defaultOptions = false;
+    // Async support
+    loadOptions = null,
+    cacheOptions = true,
+    defaultOptions = false,
 
-  // Styling & Size
-  export let selectSize = "medium";
-  export let containerSize = "md"; // Container physical size: 'xs', 'sm', 'md', 'lg', 'xl'
-  export let theme = "blue"; // Color theme: 'blue', 'purple', 'green', 'red', 'orange', 'pink', 'dark'
-  export let borderRadius = "8px"; // Border radius for modern look
-  export let customStyles = {}; // Custom style overrides: { container, control, menu, option, tag }
-  export let maxHeight = "300px";
-  export let menuPlacement = "auto"; // 'auto', 'top', 'bottom'
-  export let menuPosition = "absolute"; // 'absolute', 'fixed'
+    // Styling & Size
+    selectSize = "medium",
+    containerSize = "md",
+    theme = "blue",
+    borderRadius = "8px",
+    customStyles = {},
+    maxHeight = "300px",
+    menuPlacement = "auto",
+    menuPosition = "absolute",
 
-  // Option customization
-  export let getOptionLabel = (option) => option.label || option.value;
-  export let getOptionValue = (option) => option.id || option.value;
-  export let isOptionDisabled = (option) => option.disabled || false;
-  export let filterOption = null; // Custom filter function
+    // Option customization
+    getOptionLabel = (option) => option.label || option.value,
+    getOptionValue = (option) => option.id || option.value,
+    isOptionDisabled = (option) => option.disabled || false,
+    filterOption = null,
 
-  // Groups
-  export let isGrouped = false;
-  export let groupBy = null; // Function to group options: (option) => string
+    // Groups
+    isGrouped = false,
+    groupBy = null,
 
-  // Advanced Features
-  export let showSelectAll = false; // Show Select All / Deselect All for multi-select
-  export let selectAllText = "Select All";
-  export let deselectAllText = "Deselect All";
-  export let showOptionIcons = false; // Enable icon support in options
-  export let showOptionBadges = false; // Enable badge support in options
-  export let maxOptionsDisplay = 1000; // Maximum options to render (virtual scrolling threshold)
-  export let optionHeight = 40; // Height of each option for virtual scrolling
-  export let emptyStateText = "No options available";
-  export let emptySearchText = "No results found";
+    // Advanced Features (v2.x)
+    showSelectAll = false,
+    selectAllText = "Select All",
+    deselectAllText = "Deselect All",
+    showOptionIcons = false,
+    showOptionBadges = false,
+    maxOptionsDisplay = 1000,
+    optionHeight = 40,
+    emptyStateText = "No options available",
+    emptySearchText = "No results found",
 
-  // v2.2.0 Features
-  export let maxSelected = null; // Maximum number of selections allowed in multi-select
-  export let maxSelectedMessage = (max) => `Maximum ${max} items can be selected`;
-  export let maxTagsDisplay = null; // Maximum tags to display before showing "+X more"
-  export let showTagCount = true; // Show "+X more" when tags exceed maxTagsDisplay
-  export let validationState = null; // 'error', 'success', 'warning', or null
-  export let validationMessage = ""; // Validation message to display
-  export let showCheckboxes = false; // Show checkboxes for multi-select options
-  export let usePortal = false; // Render dropdown in a portal (body)
-  export let portalTarget = null; // Custom portal target element (defaults to body)
-  export let loadMoreOptions = null; // Function for infinite scroll: () => Promise<options>
-  export let hasMore = false; // Whether more options are available for infinite scroll
-  export let loadingMore = false; // Loading state for infinite scroll
+    // v2.2.0 Features
+    maxSelected = null,
+    maxSelectedMessage = (max) => `Maximum ${max} items can be selected`,
+    maxTagsDisplay = null,
+    showTagCount = true,
+    validationState = null,
+    validationMessage = "",
+    showCheckboxes = false,
+    usePortal = false,
+    portalTarget = null,
+    loadMoreOptions = null,
+    hasMore = false,
+    loadingMore = false,
 
-  // Misc
-  export let name = "svelte-perfect-select";
-  export let id = "svelte-perfect-select";
-  export let autoFocus = false;
-  export let openMenuOnFocus = false;
-  export let openMenuOnClick = true;
-  export let tabSelectsValue = true;
-  export let backspaceRemovesValue = true;
-  export let escapeClearsValue = false;
-  export let noOptionsMessage = () => "No options";
-  export let loadingMessage = () => "Loading...";
+    // v3.0.0 NEW FEATURES
+    enableVirtualScroll = true, // Virtual scrolling for performance
+    virtualScrollOverscan = 5, // Extra items to render
+    enableDragDrop = false, // Drag & drop tag reordering
+    commandPaletteMode = false, // Cmd+K style interface
+    commandPaletteKey = 'k', // Keyboard shortcut key
+    enableFuzzySearch = false, // Fuzzy search algorithm
+    fuzzySearchThreshold = 0.6, // Fuzzy match threshold (0-1)
+    enableCopyPaste = true, // Copy/paste support
+    pasteDelimiter = ',', // Delimiter for paste (comma, newline, etc.)
+    touchOptimized = true, // Touch/mobile optimizations
+    swipeToRemove = true, // Swipe tags to remove (mobile)
+    collapsibleGroups = false, // Collapsible option groups
+    defaultGroupsExpanded = true, // Initial group state
+    useSpringAnimations = false, // Spring physics animations
+    springStiffness = 0.3, // Spring stiffness
+    springDamping = 0.7, // Spring damping
+    keyboardShortcuts = {}, // Custom keyboard shortcuts
+    enhancedAccessibility = true, // WCAG 2.1 AAA features
+    announceChanges = true, // Screen reader announcements
 
-  const dispatch = createEventDispatcher();
+    // Custom rendering (Svelte 5 snippets)
+    optionTemplate = null, // Custom option template snippet
+    tagTemplate = null, // Custom tag template snippet
+    noOptionsTemplate = null, // Custom empty state snippet
 
-  // Theme colors
+    // Misc
+    name = "svelte-perfect-select",
+    id = "svelte-perfect-select",
+    autoFocus = false,
+    openMenuOnFocus = false,
+    openMenuOnClick = true,
+    tabSelectsValue = true,
+    backspaceRemovesValue = true,
+    escapeClearsValue = false,
+    noOptionsMessage = () => "No options",
+    loadingMessage = () => "Loading...",
+
+    // Event callbacks (Svelte 5 style - replaces createEventDispatcher)
+    onChange = null,
+    onInputChange = null,
+    onFocus = null,
+    onBlur = null,
+    onMenuOpen = null,
+    onMenuClose = null,
+    onCreateOption = null,
+    onOptionsLoaded = null,
+    onLoadError = null,
+    onMaxSelected = null,
+    onClear = null,
+    onKeyboardShortcut = null
+  } = $props();
+
+  // ========== THEME COLORS ==========
   const themes = {
     blue: { primary: '#2684FF', secondary: '#DEEBFF', tag: '#E6F2FF', tagText: '#0052CC', tagBorder: '#CCE0FF' },
     purple: { primary: '#9333EA', secondary: '#F3E8FF', tag: '#FAF5FF', tagText: '#7E22CE', tagBorder: '#E9D5FF' },
@@ -99,72 +141,407 @@
     dark: { primary: '#1F2937', secondary: '#E5E7EB', tag: '#F3F4F6', tagText: '#111827', tagBorder: '#D1D5DB' }
   };
 
-  $: currentTheme = themes[theme] || themes.blue;
+  // ========== STATE (Svelte 5 $state) ==========
+  let isOpen = $state(false);
+  let searchTerm = $state("");
+  let highlightedIndex = $state(-1);
+  let selectContainer = $state(null);
+  let searchInput = $state(null);
+  let menuRef = $state(null);
+  let internalOptions = $state(options.length > 0 ? [...options] : []);
+  let optionsCache = $state({});
+  let isLoadingAsync = $state(false);
+  let portalElement = $state(null);
+  let isLoadingMoreOptions = $state(false);
+  let showMaxSelectionWarning = $state(false);
 
-  // State
-  let isOpen = false;
-  let searchTerm = "";
-  let highlightedIndex = -1;
-  let selectContainer;
-  let searchInput;
-  let menuRef;
-  let internalOptions = options.length > 0 ? [...options] : [];
-  let optionsCache = {};
-  let isLoadingAsync = false;
-  let portalElement = null;
-  let isLoadingMoreOptions = false;
-  let showMaxSelectionWarning = false;
+  // v3.0.0 State
+  let draggedTagIndex = $state(null);
+  let dragOverTagIndex = $state(null);
+  let collapsedGroups = $state(new Set());
+  let virtualScrollTop = $state(0);
+  let touchStartX = $state(0);
+  let touchCurrentX = $state(0);
+  let swipingTagIndex = $state(null);
+  let liveRegionMessage = $state("");
+  let commandPaletteOpen = $state(false);
 
-  // Computed
-  $: {
-    if (multiple !== isMulti) multiple = isMulti;
-    if (searchable !== isSearchable) searchable = isSearchable;
-    if (clearable !== isClearable) clearable = isClearable;
-    if (disabled !== isDisabled) disabled = isDisabled;
-    if (loading !== isLoading) loading = isLoading;
+  // Spring animations for smooth interactions
+  const dropdownY = spring(0, { stiffness: springStiffness, damping: springDamping });
+  const tagScale = spring(1, { stiffness: 0.5, damping: 0.8 });
 
-    // Initialize value if undefined
-    if (value === undefined) {
-      value = multiple ? [] : null;
-    }
-  }
+  // ========== DERIVED STATE (Svelte 5 $derived) ==========
+  const currentTheme = $derived(themes[theme] || themes.blue);
 
-  $: filteredOptions = getFilteredOptions(internalOptions, searchTerm);
+  const filteredOptions = $derived.by(() => {
+    return getFilteredOptions(internalOptions, searchTerm);
+  });
 
-  $: selectedOptions = multiple
-    ? internalOptions.filter(opt => value.includes(getOptionValue(opt)))
-    : internalOptions.find(opt => getOptionValue(opt) === value);
+  const selectedOptions = $derived.by(() => {
+    return multiple
+      ? internalOptions.filter(opt => value?.includes(getOptionValue(opt)))
+      : internalOptions.find(opt => getOptionValue(opt) === value);
+  });
 
-  $: displayText = multiple
-    ? (value.length > 0 ? `${value.length} selected` : placeholder)
-    : (selectedOptions ? getOptionLabel(selectedOptions) : placeholder);
+  const displayText = $derived.by(() => {
+    return multiple
+      ? (value?.length > 0 ? `${value.length} selected` : placeholder)
+      : (selectedOptions ? getOptionLabel(selectedOptions) : placeholder);
+  });
 
-  // v2.2.0 Computed properties
-  $: visibleTags = maxTagsDisplay && selectedOptions.length > maxTagsDisplay
-    ? selectedOptions.slice(0, maxTagsDisplay)
-    : selectedOptions;
+  const visibleTags = $derived.by(() => {
+    return maxTagsDisplay && selectedOptions?.length > maxTagsDisplay
+      ? selectedOptions.slice(0, maxTagsDisplay)
+      : selectedOptions;
+  });
 
-  $: hiddenTagsCount = maxTagsDisplay && selectedOptions.length > maxTagsDisplay
-    ? selectedOptions.length - maxTagsDisplay
-    : 0;
+  const hiddenTagsCount = $derived.by(() => {
+    return maxTagsDisplay && selectedOptions?.length > maxTagsDisplay
+      ? selectedOptions.length - maxTagsDisplay
+      : 0;
+  });
 
-  $: isMaxSelectionReached = maxSelected && multiple && value.length >= maxSelected;
+  const isMaxSelectionReached = $derived(maxSelected && multiple && value?.length >= maxSelected);
 
-  $: validationColors = {
+  const validationColors = {
     error: { border: '#EF4444', shadow: 'rgba(239, 68, 68, 0.1)', text: '#DC2626' },
     success: { border: '#10B981', shadow: 'rgba(16, 185, 129, 0.1)', text: '#059669' },
     warning: { border: '#F59E0B', shadow: 'rgba(245, 158, 11, 0.1)', text: '#D97706' }
   };
 
-  $: currentValidation = validationState && validationColors[validationState]
-    ? validationColors[validationState]
-    : null;
+  const currentValidation = $derived(
+    validationState && validationColors[validationState]
+      ? validationColors[validationState]
+      : null
+  );
 
-  $: if (options) {
-    internalOptions = [...options];
+  const showCreateOption = $derived(
+    isCreatable &&
+    searchTerm.length > 0 &&
+    !filteredOptions.some(opt => getOptionLabel(opt).toLowerCase() === searchTerm.toLowerCase()) &&
+    (!isLoadingAsync || allowCreateWhileLoading)
+  );
+
+  const groupedOptions = $derived.by(() => {
+    if (isGrouped && groupBy && typeof groupBy === 'function') {
+      return groupOptions(filteredOptions, groupBy);
+    }
+    return null;
+  });
+
+  const displayOptions = $derived.by(() => {
+    if (showCreateOption) {
+      return createOptionPosition === 'first'
+        ? [{ __isCreate__: true, value: searchTerm }, ...filteredOptions]
+        : [...filteredOptions, { __isCreate__: true, value: searchTerm }];
+    }
+    return filteredOptions;
+  });
+
+  const allOptionsSelected = $derived(
+    multiple && value?.length > 0 &&
+    displayOptions.filter(opt => !isOptionDisabled(opt)).every(opt => value.includes(getOptionValue(opt)))
+  );
+
+  const someOptionsSelected = $derived(multiple && value?.length > 0 && !allOptionsSelected);
+
+  // Virtual scrolling calculations
+  const virtualizedOptions = $derived.by(() => {
+    if (!enableVirtualScroll || displayOptions.length < 50) {
+      return { visibleOptions: displayOptions, offsetY: 0, totalHeight: displayOptions.length * optionHeight };
+    }
+
+    const scrollTop = virtualScrollTop;
+    const containerHeight = 300; // Approximate, will be measured
+    const startIndex = Math.max(0, Math.floor(scrollTop / optionHeight) - virtualScrollOverscan);
+    const endIndex = Math.min(
+      displayOptions.length,
+      Math.ceil((scrollTop + containerHeight) / optionHeight) + virtualScrollOverscan
+    );
+
+    const visibleOptions = displayOptions.slice(startIndex, endIndex).map((opt, idx) => ({
+      ...opt,
+      __virtualIndex__: startIndex + idx
+    }));
+
+    return {
+      visibleOptions,
+      offsetY: startIndex * optionHeight,
+      totalHeight: displayOptions.length * optionHeight
+    };
+  });
+
+  // ========== EFFECTS (Svelte 5 $effect) ==========
+  $effect(() => {
+    if (options) {
+      internalOptions = [...options];
+    }
+  });
+
+  $effect(() => {
+    // Sync bidirectional prop aliases
+    untrack(() => {
+      if (multiple !== isMulti) multiple = isMulti;
+      if (searchable !== isSearchable) searchable = isSearchable;
+      if (clearable !== isClearable) clearable = isClearable;
+      if (disabled !== isDisabled) disabled = isDisabled;
+      if (loading !== isLoading) loading = isLoading;
+    });
+
+    // Initialize value if undefined
+    if (value === undefined) {
+      value = multiple ? [] : null;
+    }
+  });
+
+  $effect(() => {
+    if (isOpen) {
+      highlightedIndex = -1;
+    }
+  });
+
+  // Announce changes to screen readers (v3.0.0 Accessibility)
+  $effect(() => {
+    if (enhancedAccessibility && announceChanges && liveRegionMessage) {
+      // Screen readers will announce the message
+      const timeout = setTimeout(() => {
+        liveRegionMessage = "";
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  });
+
+  // ========== FUZZY SEARCH (v3.0.0) ==========
+  function fuzzyMatch(text, pattern) {
+    if (!pattern) return true;
+
+    text = text.toLowerCase();
+    pattern = pattern.toLowerCase();
+
+    let textIndex = 0;
+    let patternIndex = 0;
+    let score = 0;
+    let consecutiveMatches = 0;
+
+    while (textIndex < text.length && patternIndex < pattern.length) {
+      if (text[textIndex] === pattern[patternIndex]) {
+        score += 1 + consecutiveMatches;
+        consecutiveMatches++;
+        patternIndex++;
+      } else {
+        consecutiveMatches = 0;
+      }
+      textIndex++;
+    }
+
+    if (patternIndex !== pattern.length) return false;
+
+    const normalizedScore = score / (text.length + pattern.length);
+    return normalizedScore >= fuzzySearchThreshold;
   }
 
-  // Async loading
+  // ========== FILTER OPTIONS ==========
+  function getFilteredOptions(opts, term) {
+    if (!searchable || !term) return opts;
+
+    if (filterOption) {
+      return opts.filter(opt => filterOption({ label: getOptionLabel(opt), value: getOptionValue(opt), data: opt }, term));
+    }
+
+    if (enableFuzzySearch) {
+      return opts.filter(opt => {
+        const label = getOptionLabel(opt);
+        return label && fuzzyMatch(label, term);
+      });
+    }
+
+    const lowerTerm = term.toLowerCase();
+    return opts.filter(opt => {
+      const label = getOptionLabel(opt);
+      return label && label.toLowerCase().includes(lowerTerm);
+    });
+  }
+
+  // ========== CREATE OPTION ==========
+  function createOption(inputValue) {
+    const newOption = {
+      id: `created-${Date.now()}`,
+      value: inputValue,
+      label: inputValue,
+      __isNew__: true
+    };
+
+    onCreateOption?.({ option: newOption });
+    selectOption(newOption);
+  }
+
+  // ========== GROUP OPTIONS ==========
+  function groupOptions(opts, groupFn) {
+    return opts.reduce((groups, option) => {
+      const groupKey = groupFn(option);
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(option);
+      return groups;
+    }, {});
+  }
+
+  // ========== TOGGLE DROPDOWN ==========
+  async function toggleDropdown() {
+    if (disabled) return;
+
+    if (!isOpen && loadOptions && defaultOptions) {
+      await handleLoadOptions('');
+    }
+
+    isOpen = !isOpen;
+
+    if (isOpen) {
+      if (useSpringAnimations) {
+        dropdownY.set(-10);
+        dropdownY.set(0);
+      }
+
+      if (searchable) {
+        await tick();
+        searchInput?.focus();
+      }
+      onMenuOpen?.();
+
+      if (announceChanges) {
+        liveRegionMessage = "Options menu opened";
+      }
+    } else {
+      onMenuClose?.();
+      searchTerm = "";
+
+      if (announceChanges) {
+        liveRegionMessage = "Options menu closed";
+      }
+    }
+  }
+
+  // ========== SELECT OPTION ==========
+  function selectOption(option) {
+    if (option.__isCreate__) {
+      createOption(option.value);
+      return;
+    }
+
+    if (isOptionDisabled(option)) return;
+
+    const optionValue = getOptionValue(option);
+
+    if (multiple) {
+      const index = value.indexOf(optionValue);
+      if (index > -1) {
+        // Deselecting
+        value = value.filter(v => v !== optionValue);
+        showMaxSelectionWarning = false;
+
+        if (announceChanges) {
+          liveRegionMessage = `Removed ${getOptionLabel(option)}. ${value.length} items selected.`;
+        }
+      } else {
+        // Selecting - check max limit
+        if (maxSelected && value.length >= maxSelected) {
+          showMaxSelectionWarning = true;
+          onMaxSelected?.({ max: maxSelected, message: maxSelectedMessage(maxSelected) });
+          setTimeout(() => {
+            showMaxSelectionWarning = false;
+          }, 3000);
+          return;
+        }
+        value = hideSelectedOptions ? [...value, optionValue] : [...value, optionValue];
+        showMaxSelectionWarning = false;
+
+        if (announceChanges) {
+          liveRegionMessage = `Selected ${getOptionLabel(option)}. ${value.length} items selected.`;
+        }
+      }
+    } else {
+      value = optionValue;
+      if (closeMenuOnSelect) {
+        isOpen = false;
+        searchTerm = "";
+      }
+
+      if (announceChanges) {
+        liveRegionMessage = `Selected ${getOptionLabel(option)}`;
+      }
+    }
+
+    onChange?.({ value, option, action: 'select-option' });
+    onInputChange?.({ value: '', action: 'set-value' });
+  }
+
+  // ========== REMOVE OPTION ==========
+  function removeOption(optionValue, event) {
+    event?.stopPropagation();
+    const removedOption = internalOptions.find(opt => getOptionValue(opt) === optionValue);
+    value = value.filter(v => v !== optionValue);
+    onChange?.({ value, action: 'remove-value' });
+
+    if (announceChanges && removedOption) {
+      liveRegionMessage = `Removed ${getOptionLabel(removedOption)}. ${value.length} items selected.`;
+    }
+  }
+
+  // ========== CLEAR SELECTION ==========
+  function clearSelection(event) {
+    event?.stopPropagation();
+    value = multiple ? [] : null;
+    searchTerm = "";
+    onClear?.();
+    onChange?.({ value, action: 'clear' });
+
+    if (announceChanges) {
+      liveRegionMessage = "Selection cleared";
+    }
+  }
+
+  // ========== SELECT ALL / DESELECT ALL ==========
+  function selectAll() {
+    if (!multiple) return;
+    const selectableOptions = displayOptions.filter(opt => !isOptionDisabled(opt) && !opt.__isCreate__);
+    value = selectableOptions.map(opt => getOptionValue(opt));
+    onChange?.({ value, action: 'select-all' });
+
+    if (announceChanges) {
+      liveRegionMessage = `Selected all ${value.length} items`;
+    }
+  }
+
+  function deselectAll() {
+    if (!multiple) return;
+    value = [];
+    onChange?.({ value, action: 'deselect-all' });
+
+    if (announceChanges) {
+      liveRegionMessage = "Deselected all items";
+    }
+  }
+
+  function toggleSelectAll() {
+    if (allOptionsSelected) {
+      deselectAll();
+    } else {
+      selectAll();
+    }
+  }
+
+  // ========== SEARCH ==========
+  async function handleSearch(event) {
+    searchTerm = event.target.value;
+    onInputChange?.({ value: searchTerm, action: 'input-change' });
+
+    if (loadOptions) {
+      await handleLoadOptions(searchTerm);
+    }
+  }
+
+  // ========== ASYNC LOADING ==========
   async function handleLoadOptions(inputValue = '') {
     if (!loadOptions) return;
 
@@ -180,183 +557,34 @@
       if (cacheOptions) {
         optionsCache[inputValue] = internalOptions;
       }
-      dispatch('optionsLoaded', { options: internalOptions });
+      onOptionsLoaded?.({ options: internalOptions });
     } catch (error) {
-      dispatch('loadError', { error });
+      onLoadError?.({ error });
     } finally {
       isLoadingAsync = false;
     }
   }
 
-  // Filter options
-  function getFilteredOptions(opts, term) {
-    if (!searchable || !term) return opts;
-
-    if (filterOption) {
-      return opts.filter(opt => filterOption({ label: getOptionLabel(opt), value: getOptionValue(opt), data: opt }, term));
-    }
-
-    const lowerTerm = term.toLowerCase();
-    return opts.filter(opt => {
-      const label = getOptionLabel(opt);
-      return label && label.toLowerCase().includes(lowerTerm);
-    });
-  }
-
-  // Create option
-  function createOption(inputValue) {
-    const newOption = {
-      id: `created-${Date.now()}`,
-      value: inputValue,
-      label: inputValue,
-      __isNew__: true
-    };
-
-    dispatch('createOption', { option: newOption });
-    selectOption(newOption);
-  }
-
-  $: showCreateOption = isCreatable &&
-    searchTerm.length > 0 &&
-    !filteredOptions.some(opt => getOptionLabel(opt).toLowerCase() === searchTerm.toLowerCase()) &&
-    (!isLoadingAsync || allowCreateWhileLoading);
-
-  // Group options if groupBy is provided
-  function groupOptions(opts, groupFn) {
-    return opts.reduce((groups, option) => {
-      const groupKey = groupFn(option);
-      if (!groups[groupKey]) {
-        groups[groupKey] = [];
-      }
-      groups[groupKey].push(option);
-      return groups;
-    }, {});
-  }
-
-  $: groupedOptions = isGrouped && groupBy && typeof groupBy === 'function'
-    ? groupOptions(filteredOptions, groupBy)
-    : null;
-
-  $: displayOptions = showCreateOption
-    ? createOptionPosition === 'first'
-      ? [{ __isCreate__: true, value: searchTerm }, ...filteredOptions]
-      : [...filteredOptions, { __isCreate__: true, value: searchTerm }]
-    : filteredOptions;
-
-  $: allOptionsSelected = multiple && value.length > 0 &&
-    displayOptions.filter(opt => !isOptionDisabled(opt)).every(opt => value.includes(getOptionValue(opt)));
-
-  $: someOptionsSelected = multiple && value.length > 0 && !allOptionsSelected;
-
-  // Functions
-  async function toggleDropdown() {
+  // ========== KEYBOARD NAVIGATION ==========
+  function handleKeydown(event) {
     if (disabled) return;
 
-    if (!isOpen && loadOptions && defaultOptions) {
-      await handleLoadOptions('');
-    }
-
-    isOpen = !isOpen;
-
-    if (isOpen) {
-      if (searchable) {
-        await tick();
-        searchInput?.focus();
-      }
-      dispatch('menuOpen');
-    } else {
-      dispatch('menuClose');
-      searchTerm = "";
-    }
-  }
-
-  function selectOption(option) {
-    if (option.__isCreate__) {
-      createOption(option.value);
+    // Custom keyboard shortcuts (v3.0.0)
+    const shortcutKey = `${event.ctrlKey ? 'Ctrl+' : ''}${event.shiftKey ? 'Shift+' : ''}${event.altKey ? 'Alt+' : ''}${event.key}`;
+    if (keyboardShortcuts[shortcutKey]) {
+      event.preventDefault();
+      keyboardShortcuts[shortcutKey](event);
+      onKeyboardShortcut?.({ key: shortcutKey, event });
       return;
     }
 
-    if (isOptionDisabled(option)) return;
-
-    const optionValue = getOptionValue(option);
-
-    if (multiple) {
-      const index = value.indexOf(optionValue);
-      if (index > -1) {
-        // Deselecting - always allowed
-        value = value.filter(v => v !== optionValue);
-        showMaxSelectionWarning = false;
-      } else {
-        // Selecting - check max limit
-        if (maxSelected && value.length >= maxSelected) {
-          showMaxSelectionWarning = true;
-          dispatch('maxSelected', { max: maxSelected, message: maxSelectedMessage(maxSelected) });
-          setTimeout(() => {
-            showMaxSelectionWarning = false;
-          }, 3000);
-          return;
-        }
-        value = hideSelectedOptions ? [...value, optionValue] : [...value, optionValue];
-        showMaxSelectionWarning = false;
-      }
-    } else {
-      value = optionValue;
-      if (closeMenuOnSelect) {
-        isOpen = false;
-        searchTerm = "";
-      }
+    // Command palette mode (Cmd/Ctrl + K)
+    if (commandPaletteMode && ((event.metaKey || event.ctrlKey) && event.key === commandPaletteKey)) {
+      event.preventDefault();
+      commandPaletteOpen = !commandPaletteOpen;
+      isOpen = commandPaletteOpen;
+      return;
     }
-
-    dispatch('change', { value, option, action: 'select-option' });
-    dispatch('inputChange', { value: '', action: 'set-value' });
-  }
-
-  function removeOption(optionValue, event) {
-    event?.stopPropagation();
-    value = value.filter(v => v !== optionValue);
-    dispatch('change', { value, action: 'remove-value' });
-  }
-
-  function clearSelection(event) {
-    event?.stopPropagation();
-    value = multiple ? [] : null;
-    searchTerm = "";
-    dispatch('clear');
-    dispatch('change', { value, action: 'clear' });
-  }
-
-  function selectAll() {
-    if (!multiple) return;
-    const selectableOptions = displayOptions.filter(opt => !isOptionDisabled(opt) && !opt.__isCreate__);
-    value = selectableOptions.map(opt => getOptionValue(opt));
-    dispatch('change', { value, action: 'select-all' });
-  }
-
-  function deselectAll() {
-    if (!multiple) return;
-    value = [];
-    dispatch('change', { value, action: 'deselect-all' });
-  }
-
-  function toggleSelectAll() {
-    if (allOptionsSelected) {
-      deselectAll();
-    } else {
-      selectAll();
-    }
-  }
-
-  async function handleSearch(event) {
-    searchTerm = event.target.value;
-    dispatch('inputChange', { value: searchTerm, action: 'input-change' });
-
-    if (loadOptions) {
-      await handleLoadOptions(searchTerm);
-    }
-  }
-
-  function handleKeydown(event) {
-    if (disabled) return;
 
     switch(event.key) {
       case 'ArrowDown':
@@ -408,9 +636,17 @@
           removeOption(value[value.length - 1]);
         }
         break;
+      case 'a':
+        // Ctrl/Cmd + A to select all (v3.0.0)
+        if ((event.ctrlKey || event.metaKey) && multiple && isOpen) {
+          event.preventDefault();
+          selectAll();
+        }
+        break;
     }
   }
 
+  // ========== SCROLL TO HIGHLIGHTED ==========
   function scrollToHighlighted() {
     const optionElements = menuRef?.querySelectorAll('.option');
     const highlighted = optionElements?.[highlightedIndex];
@@ -426,36 +662,40 @@
     }
   }
 
+  // ========== CLICK OUTSIDE ==========
   function handleClickOutside(event) {
     if (selectContainer && !selectContainer.contains(event.target)) {
       if (isOpen) {
-        dispatch('blur');
+        onBlur?.();
       }
       isOpen = false;
       searchTerm = "";
       highlightedIndex = -1;
+      commandPaletteOpen = false;
     }
   }
 
+  // ========== IS SELECTED ==========
   function isSelected(option) {
     return multiple
-      ? value.includes(getOptionValue(option))
+      ? value?.includes(getOptionValue(option))
       : value === getOptionValue(option);
   }
 
+  // ========== HANDLE FOCUS ==========
   function handleFocus() {
     if (openMenuOnFocus && !disabled) {
       isOpen = true;
     }
-    dispatch('focus');
+    onFocus?.();
   }
 
-  // v2.2.0 Functions
+  // ========== INFINITE SCROLL ==========
   async function handleInfiniteScroll(event) {
     if (!loadMoreOptions || !hasMore || isLoadingMoreOptions) return;
 
     const target = event.target;
-    const scrollThreshold = 50; // pixels from bottom
+    const scrollThreshold = 50;
 
     if (target.scrollHeight - target.scrollTop - target.clientHeight < scrollThreshold) {
       isLoadingMoreOptions = true;
@@ -463,16 +703,164 @@
         const newOptions = await loadMoreOptions();
         if (newOptions && newOptions.length > 0) {
           internalOptions = [...internalOptions, ...newOptions];
-          dispatch('optionsLoaded', { options: newOptions });
+          onOptionsLoaded?.({ options: newOptions });
         }
       } catch (error) {
-        dispatch('loadError', { error });
+        onLoadError?.({ error });
       } finally {
         isLoadingMoreOptions = false;
       }
     }
   }
 
+  // ========== VIRTUAL SCROLL HANDLER (v3.0.0) ==========
+  function handleVirtualScroll(event) {
+    virtualScrollTop = event.target.scrollTop;
+    handleInfiniteScroll(event); // Also handle infinite scroll
+  }
+
+  // ========== DRAG & DROP FOR TAGS (v3.0.0) ==========
+  function handleTagDragStart(event, index) {
+    if (!enableDragDrop) return;
+    draggedTagIndex = index;
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', index.toString());
+
+    if (announceChanges) {
+      liveRegionMessage = `Started dragging ${getOptionLabel(selectedOptions[index])}`;
+    }
+  }
+
+  function handleTagDragOver(event, index) {
+    if (!enableDragDrop) return;
+    event.preventDefault();
+    dragOverTagIndex = index;
+  }
+
+  function handleTagDrop(event, dropIndex) {
+    if (!enableDragDrop) return;
+    event.preventDefault();
+
+    if (draggedTagIndex === null || draggedTagIndex === dropIndex) {
+      draggedTagIndex = null;
+      dragOverTagIndex = null;
+      return;
+    }
+
+    // Reorder the value array
+    const newSelectedOptions = [...selectedOptions];
+    const [draggedOption] = newSelectedOptions.splice(draggedTagIndex, 1);
+    newSelectedOptions.splice(dropIndex, 0, draggedOption);
+
+    value = newSelectedOptions.map(opt => getOptionValue(opt));
+    onChange?.({ value, action: 'reorder' });
+
+    if (announceChanges) {
+      liveRegionMessage = `Moved ${getOptionLabel(draggedOption)} to position ${dropIndex + 1}`;
+    }
+
+    draggedTagIndex = null;
+    dragOverTagIndex = null;
+  }
+
+  function handleTagDragEnd() {
+    draggedTagIndex = null;
+    dragOverTagIndex = null;
+  }
+
+  // ========== TOUCH GESTURES (v3.0.0) ==========
+  function handleTouchStart(event, index) {
+    if (!touchOptimized || !swipeToRemove) return;
+    touchStartX = event.touches[0].clientX;
+    touchCurrentX = touchStartX;
+    swipingTagIndex = index;
+  }
+
+  function handleTouchMove(event, index) {
+    if (!touchOptimized || !swipeToRemove || swipingTagIndex !== index) return;
+    touchCurrentX = event.touches[0].clientX;
+  }
+
+  function handleTouchEnd(event, index, optionValue) {
+    if (!touchOptimized || !swipeToRemove || swipingTagIndex !== index) return;
+
+    const swipeDistance = touchCurrentX - touchStartX;
+    const swipeThreshold = 50; // pixels
+
+    if (Math.abs(swipeDistance) > swipeThreshold) {
+      // Swipe detected - remove tag
+      removeOption(optionValue, event);
+
+      if (announceChanges) {
+        liveRegionMessage = "Tag removed by swipe";
+      }
+    }
+
+    touchStartX = 0;
+    touchCurrentX = 0;
+    swipingTagIndex = null;
+  }
+
+  // ========== COPY/PASTE SUPPORT (v3.0.0) ==========
+  function handlePaste(event) {
+    if (!enableCopyPaste || !multiple) return;
+
+    event.preventDefault();
+    const pastedText = event.clipboardData.getData('text');
+    const delimiter = pasteDelimiter === 'newline' ? '\n' : pasteDelimiter;
+    const pastedValues = pastedText.split(delimiter).map(v => v.trim()).filter(v => v);
+
+    // Try to match pasted values with options
+    const matchedOptions = pastedValues.map(pastedValue => {
+      return internalOptions.find(opt =>
+        getOptionLabel(opt).toLowerCase() === pastedValue.toLowerCase() ||
+        getOptionValue(opt).toString() === pastedValue
+      );
+    }).filter(opt => opt && !isOptionDisabled(opt));
+
+    if (matchedOptions.length > 0) {
+      const newValues = matchedOptions.map(opt => getOptionValue(opt));
+      value = [...new Set([...value, ...newValues])]; // Deduplicate
+      onChange?.({ value, action: 'paste' });
+
+      if (announceChanges) {
+        liveRegionMessage = `Pasted and selected ${matchedOptions.length} items`;
+      }
+    }
+  }
+
+  function handleCopy(event) {
+    if (!enableCopyPaste || !multiple || !value || value.length === 0) return;
+
+    const selectedLabels = selectedOptions.map(opt => getOptionLabel(opt)).join(', ');
+    event.clipboardData.setData('text/plain', selectedLabels);
+    event.preventDefault();
+
+    if (announceChanges) {
+      liveRegionMessage = `Copied ${value.length} items to clipboard`;
+    }
+  }
+
+  // ========== TOGGLE GROUP COLLAPSE (v3.0.0) ==========
+  function toggleGroupCollapse(groupName) {
+    if (!collapsibleGroups) return;
+
+    const newCollapsed = new Set(collapsedGroups);
+    if (newCollapsed.has(groupName)) {
+      newCollapsed.delete(groupName);
+      if (announceChanges) {
+        liveRegionMessage = `Expanded group ${groupName}`;
+      }
+    } else {
+      newCollapsed.add(groupName);
+      if (announceChanges) {
+        liveRegionMessage = `Collapsed group ${groupName}`;
+      }
+    }
+    collapsedGroups = newCollapsed;
+  }
+
+  // ========== PORTAL ==========
   function createPortal() {
     if (!usePortal) return;
     portalElement = portalTarget || document.body;
@@ -482,6 +870,7 @@
     portalElement = null;
   }
 
+  // ========== LIFECYCLE ==========
   onMount(() => {
     document.addEventListener('click', handleClickOutside);
 
@@ -495,28 +884,32 @@
 
     createPortal();
 
+    // Initialize collapsed groups
+    if (collapsibleGroups && !defaultGroupsExpanded && groupedOptions) {
+      collapsedGroups = new Set(Object.keys(groupedOptions));
+    }
+
     return () => {
       document.removeEventListener('click', handleClickOutside);
       destroyPortal();
     };
   });
-
-  $: if (isOpen) {
-    highlightedIndex = -1;
-  }
 </script>
 
 <div
   class="select-container {selectSize} {containerSize} theme-{theme}"
   class:disabled
   class:rtl={isRtl}
+  class:command-palette={commandPaletteMode && commandPaletteOpen}
   bind:this={selectContainer}
-  on:keydown={handleKeydown}
+  onkeydown={handleKeydown}
+  onpaste={handlePaste}
+  oncopy={handleCopy}
   role="combobox"
   tabindex="0"
   aria-controls="options-list"
   aria-expanded={isOpen}
-  on:focus={handleFocus}
+  onfocus={handleFocus}
   style="{customStyles.container || ''}"
 >
   <div
@@ -526,8 +919,8 @@
     class:validation-error={validationState === 'error'}
     class:validation-success={validationState === 'success'}
     class:validation-warning={validationState === 'warning'}
-    on:click={() => openMenuOnClick && toggleDropdown()}
-    on:keydown={handleKeydown}
+    onclick={() => openMenuOnClick && toggleDropdown()}
+    onkeydown={handleKeydown}
     tabindex={disabled ? -1 : 0}
     role="button"
     aria-haspopup="listbox"
@@ -536,15 +929,42 @@
     style="{currentValidation ? `border-color: ${currentValidation.border}; box-shadow: 0 0 0 3px ${currentValidation.shadow};` : ''} {customStyles.control || ''}"
   >
     <div class="select-value">
-      {#if multiple && value.length > 0}
+      {#if multiple && value?.length > 0}
         <div class="tags">
-          {#each visibleTags as option (getOptionValue(option))}
-            <span class="tag" class:disabled in:scale="{{ duration: 200 }}" out:scale="{{ duration: 150 }}">
-              <span class="tag-label">{getOptionLabel(option)}</span>
+          {#each visibleTags as option, index (getOptionValue(option))}
+            {@const optVal = getOptionValue(option)}
+            {@const isDragging = draggedTagIndex === index}
+            {@const isDragOver = dragOverTagIndex === index}
+            {@const isSwiping = swipingTagIndex === index}
+            {@const swipeOffset = isSwiping ? touchCurrentX - touchStartX : 0}
+
+            <span
+              class="tag"
+              class:disabled
+              class:dragging={isDragging}
+              class:drag-over={isDragOver}
+              draggable={enableDragDrop && !disabled}
+              ondragstart={(e) => handleTagDragStart(e, index)}
+              ondragover={(e) => handleTagDragOver(e, index)}
+              ondrop={(e) => handleTagDrop(e, index)}
+              ondragend={handleTagDragEnd}
+              ontouchstart={(e) => handleTouchStart(e, index)}
+              ontouchmove={(e) => handleTouchMove(e, index)}
+              ontouchend={(e) => handleTouchEnd(e, index, optVal)}
+              style="transform: translateX({swipeOffset}px); opacity: {Math.max(0, 1 - Math.abs(swipeOffset) / 100)}"
+              in:scale="{{ duration: 200 }}"
+              out:scale="{{ duration: 150 }}"
+            >
+              {#if tagTemplate}
+                {@render tagTemplate(option)}
+              {:else}
+                <span class="tag-label">{getOptionLabel(option)}</span>
+              {/if}
+
               {#if !disabled}
                 <button
                   class="tag-remove"
-                  on:click={(e) => removeOption(getOptionValue(option), e)}
+                  onclick={(e) => removeOption(optVal, e)}
                   aria-label="Remove {getOptionLabel(option)}"
                   type="button"
                 >
@@ -575,7 +995,7 @@
       {#if clearable && value && (!multiple || value.length > 0) && !disabled && !loading && !isLoadingAsync}
         <button
           class="clear-button"
-          on:click={clearSelection}
+          onclick={clearSelection}
           aria-label="Clear selection"
           type="button"
         >
@@ -623,10 +1043,11 @@
     <div
       class="dropdown {menuPlacement}"
       class:fixed={menuPosition === 'fixed'}
+      class:command-palette-dropdown={commandPaletteMode && commandPaletteOpen}
       style="max-height: {maxHeight}"
       role="listbox"
       aria-multiselectable={multiple}
-      in:fly="{{ y: -10, duration: 200 }}"
+      in:fly="{{ y: useSpringAnimations ? $dropdownY : -10, duration: 200 }}"
       out:fade="{{ duration: 150 }}"
     >
       {#if searchable}
@@ -635,10 +1056,10 @@
             bind:this={searchInput}
             type="text"
             class="search-input"
-            placeholder="Search..."
+            placeholder={commandPaletteMode ? "Type to search..." : "Search..."}
             value={searchTerm}
-            on:input={handleSearch}
-            on:click|stopPropagation
+            oninput={handleSearch}
+            onclick={(e) => e.stopPropagation()}
             aria-label="Search options"
             aria-autocomplete="list"
           />
@@ -649,21 +1070,26 @@
         class="options-list"
         id="options-list"
         bind:this={menuRef}
-        on:scroll={handleInfiniteScroll}
+        onscroll={enableVirtualScroll ? handleVirtualScroll : handleInfiniteScroll}
       >
         {#if isLoadingAsync}
           <div class="loading-message">{loadingMessage()}</div>
         {:else if displayOptions.length === 0}
           <div class="no-options">
-            {searchTerm ? emptySearchText : emptyStateText}
+            {#if noOptionsTemplate}
+              {@render noOptionsTemplate()}
+            {:else}
+              {searchTerm ? emptySearchText : emptyStateText}
+            {/if}
           </div>
         {:else}
           {#if multiple && showSelectAll && !searchTerm}
             <div class="select-all-container">
               <button
                 class="select-all-button"
-                on:click={toggleSelectAll}
+                onclick={toggleSelectAll}
                 type="button"
+                aria-label={allOptionsSelected ? deselectAllText : selectAllText}
               >
                 <input
                   type="checkbox"
@@ -671,6 +1097,7 @@
                   indeterminate={someOptionsSelected}
                   tabindex="-1"
                   aria-hidden="true"
+                  readonly
                 />
                 <span class="select-all-text">
                   {allOptionsSelected ? deselectAllText : selectAllText}
@@ -684,57 +1111,162 @@
 
           {#if groupedOptions}
             {#each Object.entries(groupedOptions) as [groupName, groupOptions]}
+              {@const isCollapsed = collapsedGroups.has(groupName)}
+
               <div class="option-group">
-                <div class="option-group-label">{groupName}</div>
-                {#each groupOptions as option, index (getOptionValue(option))}
+                <div
+                  class="option-group-label"
+                  class:collapsible={collapsibleGroups}
+                  class:collapsed={isCollapsed}
+                  onclick={() => toggleGroupCollapse(groupName)}
+                  role={collapsibleGroups ? 'button' : 'presentation'}
+                  aria-expanded={collapsibleGroups ? !isCollapsed : undefined}
+                  tabindex={collapsibleGroups ? 0 : -1}
+                >
+                  {#if collapsibleGroups}
+                    <svg class="group-chevron" class:collapsed={isCollapsed} width="12" height="12" viewBox="0 0 20 20">
+                      <path d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"></path>
+                    </svg>
+                  {/if}
+                  {groupName}
+                </div>
+
+                {#if !isCollapsed}
+                  {#each groupOptions as option, index (getOptionValue(option))}
+                    <div
+                      class="option"
+                      class:selected={isSelected(option)}
+                      class:highlighted={index === highlightedIndex}
+                      class:disabled={isOptionDisabled(option)}
+                      class:hidden={hideSelectedOptions && isSelected(option)}
+                      onclick={() => selectOption(option)}
+                      onkeydown={(e) => e.key === 'Enter' && selectOption(option)}
+                      onmouseenter={() => highlightedIndex = index}
+                      role="option"
+                      tabindex="-1"
+                      aria-selected={isSelected(option)}
+                      aria-disabled={isOptionDisabled(option)}
+                      in:fly="{{ y: -5, duration: 150, delay: index * 15 }}"
+                    >
+                      {#if multiple && showCheckboxes}
+                        {#key value}
+                          <input
+                            type="checkbox"
+                            checked={isSelected(option)}
+                            onclick={(e) => e.preventDefault()}
+                            disabled={isOptionDisabled(option)}
+                            tabindex="-1"
+                            aria-hidden="true"
+                            readonly
+                          />
+                        {/key}
+                      {/if}
+
+                      {#if optionTemplate}
+                        {@render optionTemplate(option, isSelected(option))}
+                      {:else}
+                        {#if showOptionIcons && option.icon}
+                          <span class="option-icon">
+                            {#if typeof option.icon === 'string'}
+                              <img src={option.icon} alt="" class="option-icon-img" />
+                            {:else}
+                              {@html option.icon}
+                            {/if}
+                          </span>
+                        {/if}
+                        <div class="option-content">
+                          <span class="option-label">{getOptionLabel(option)}</span>
+                          {#if option.description}
+                            <span class="option-description">{option.description}</span>
+                          {/if}
+                        </div>
+                        {#if showOptionBadges && option.badge}
+                          <span class="option-badge" style="background-color: {option.badgeColor || '#E5E7EB'}">
+                            {option.badge}
+                          </span>
+                        {/if}
+                      {/if}
+
+                      {#if isSelected(option)}
+                        <span class="check-icon">
+                          <svg width="16" height="16" viewBox="0 0 20 20">
+                            <path d="M7.629 12.173l-2.83-2.83c-0.293-0.293-0.768-0.293-1.061 0s-0.293 0.768 0 1.061l3.36 3.36c0.293 0.293 0.768 0.293 1.061 0l7.36-7.36c0.293-0.293 0.293-0.768 0-1.061s-0.768-0.293-1.061 0l-6.829 6.83z"></path>
+                          </svg>
+                        </span>
+                      {/if}
+                    </div>
+                  {/each}
+                {/if}
+              </div>
+            {/each}
+          {:else if enableVirtualScroll && displayOptions.length >= 50}
+            <!-- Virtual Scrolling -->
+            <div style="height: {virtualizedOptions.totalHeight}px; position: relative;">
+              <div style="transform: translateY({virtualizedOptions.offsetY}px); position: absolute; width: 100%;">
+                {#each virtualizedOptions.visibleOptions as option, index (option.__isCreate__ ? `create-${option.value}` : getOptionValue(option))}
+                  {@const realIndex = option.__virtualIndex__ ?? index}
                   <div
                     class="option"
-                    class:selected={isSelected(option)}
-                    class:highlighted={index === highlightedIndex}
-                    class:disabled={isOptionDisabled(option)}
-                    class:hidden={hideSelectedOptions && isSelected(option)}
-                    on:click={() => selectOption(option)}
-                    on:keydown={(e) => e.key === 'Enter' && selectOption(option)}
-                    on:mouseenter={() => highlightedIndex = index}
+                    class:selected={!option.__isCreate__ && isSelected(option)}
+                    class:highlighted={realIndex === highlightedIndex}
+                    class:disabled={!option.__isCreate__ && isOptionDisabled(option)}
+                    class:create-option={option.__isCreate__}
+                    class:hidden={!option.__isCreate__ && hideSelectedOptions && isSelected(option)}
+                    style="height: {optionHeight}px"
+                    onclick={() => selectOption(option)}
+                    onkeydown={(e) => e.key === 'Enter' && selectOption(option)}
+                    onmouseenter={() => highlightedIndex = realIndex}
                     role="option"
                     tabindex="-1"
-                    aria-selected={isSelected(option)}
-                    aria-disabled={isOptionDisabled(option)}
-                    in:fly="{{ y: -5, duration: 150, delay: index * 15 }}"
+                    aria-selected={!option.__isCreate__ && isSelected(option)}
+                    aria-disabled={!option.__isCreate__ && isOptionDisabled(option)}
                   >
-                    {#if multiple && showCheckboxes}
+                    {#if multiple && showCheckboxes && !option.__isCreate__}
                       {#key value}
                         <input
                           type="checkbox"
                           checked={isSelected(option)}
-                          on:click|preventDefault
+                          onclick={(e) => e.preventDefault()}
                           disabled={isOptionDisabled(option)}
                           tabindex="-1"
                           aria-hidden="true"
+                          readonly
                         />
                       {/key}
                     {/if}
-                    {#if showOptionIcons && option.icon}
-                      <span class="option-icon">
-                        {#if typeof option.icon === 'string'}
-                          <img src={option.icon} alt="" class="option-icon-img" />
-                        {:else}
-                          {@html option.icon}
-                        {/if}
-                      </span>
-                    {/if}
-                    <div class="option-content">
-                      <span class="option-label">{getOptionLabel(option)}</span>
-                      {#if option.description}
-                        <span class="option-description">{option.description}</span>
+
+                    {#if optionTemplate && !option.__isCreate__}
+                      {@render optionTemplate(option, isSelected(option))}
+                    {:else}
+                      {#if showOptionIcons && option.icon && !option.__isCreate__}
+                        <span class="option-icon">
+                          {#if typeof option.icon === 'string'}
+                            <img src={option.icon} alt="" class="option-icon-img" />
+                          {:else}
+                            {@html option.icon}
+                          {/if}
+                        </span>
                       {/if}
-                    </div>
-                    {#if showOptionBadges && option.badge}
-                      <span class="option-badge" style="background-color: {option.badgeColor || '#E5E7EB'}">
-                        {option.badge}
-                      </span>
+                      <div class="option-content">
+                        <span class="option-label">
+                          {#if option.__isCreate__}
+                            {formatCreateLabel(option.value)}
+                          {:else}
+                            {getOptionLabel(option)}
+                          {/if}
+                        </span>
+                        {#if option.description && !option.__isCreate__}
+                          <span class="option-description">{option.description}</span>
+                        {/if}
+                      </div>
+                      {#if showOptionBadges && option.badge && !option.__isCreate__}
+                        <span class="option-badge" style="background-color: {option.badgeColor || '#E5E7EB'}">
+                          {option.badge}
+                        </span>
+                      {/if}
                     {/if}
-                    {#if isSelected(option)}
+
+                    {#if !option.__isCreate__ && isSelected(option)}
                       <span class="check-icon">
                         <svg width="16" height="16" viewBox="0 0 20 20">
                           <path d="M7.629 12.173l-2.83-2.83c-0.293-0.293-0.768-0.293-1.061 0s-0.293 0.768 0 1.061l3.36 3.36c0.293 0.293 0.768 0.293 1.061 0l7.36-7.36c0.293-0.293 0.293-0.768 0-1.061s-0.768-0.293-1.061 0l-6.829 6.83z"></path>
@@ -744,8 +1276,9 @@
                   </div>
                 {/each}
               </div>
-            {/each}
+            </div>
           {:else}
+            <!-- Regular rendering (non-virtualized) -->
             {#each displayOptions as option, index (option.__isCreate__ ? `create-${option.value}` : getOptionValue(option))}
               <div
                 class="option"
@@ -754,9 +1287,9 @@
                 class:disabled={!option.__isCreate__ && isOptionDisabled(option)}
                 class:create-option={option.__isCreate__}
                 class:hidden={!option.__isCreate__ && hideSelectedOptions && isSelected(option)}
-                on:click={() => selectOption(option)}
-                on:keydown={(e) => e.key === 'Enter' && selectOption(option)}
-                on:mouseenter={() => highlightedIndex = index}
+                onclick={() => selectOption(option)}
+                onkeydown={(e) => e.key === 'Enter' && selectOption(option)}
+                onmouseenter={() => highlightedIndex = index}
                 role="option"
                 tabindex="-1"
                 aria-selected={!option.__isCreate__ && isSelected(option)}
@@ -768,39 +1301,46 @@
                     <input
                       type="checkbox"
                       checked={isSelected(option)}
-                      on:click|preventDefault
+                      onclick={(e) => e.preventDefault()}
                       disabled={isOptionDisabled(option)}
                       tabindex="-1"
                       aria-hidden="true"
+                      readonly
                     />
                   {/key}
                 {/if}
-                {#if showOptionIcons && option.icon && !option.__isCreate__}
-                  <span class="option-icon">
-                    {#if typeof option.icon === 'string'}
-                      <img src={option.icon} alt="" class="option-icon-img" />
-                    {:else}
-                      {@html option.icon}
-                    {/if}
-                  </span>
-                {/if}
-                <div class="option-content">
-                  <span class="option-label">
-                    {#if option.__isCreate__}
-                      {formatCreateLabel(option.value)}
-                    {:else}
-                      {getOptionLabel(option)}
-                    {/if}
-                  </span>
-                  {#if option.description && !option.__isCreate__}
-                    <span class="option-description">{option.description}</span>
+
+                {#if optionTemplate && !option.__isCreate__}
+                  {@render optionTemplate(option, isSelected(option))}
+                {:else}
+                  {#if showOptionIcons && option.icon && !option.__isCreate__}
+                    <span class="option-icon">
+                      {#if typeof option.icon === 'string'}
+                        <img src={option.icon} alt="" class="option-icon-img" />
+                      {:else}
+                        {@html option.icon}
+                      {/if}
+                    </span>
                   {/if}
-                </div>
-                {#if showOptionBadges && option.badge && !option.__isCreate__}
-                  <span class="option-badge" style="background-color: {option.badgeColor || '#E5E7EB'}">
-                    {option.badge}
-                  </span>
+                  <div class="option-content">
+                    <span class="option-label">
+                      {#if option.__isCreate__}
+                        {formatCreateLabel(option.value)}
+                      {:else}
+                        {getOptionLabel(option)}
+                      {/if}
+                    </span>
+                    {#if option.description && !option.__isCreate__}
+                      <span class="option-description">{option.description}</span>
+                    {/if}
+                  </div>
+                  {#if showOptionBadges && option.badge && !option.__isCreate__}
+                    <span class="option-badge" style="background-color: {option.badgeColor || '#E5E7EB'}">
+                      {option.badge}
+                    </span>
+                  {/if}
                 {/if}
+
                 {#if !option.__isCreate__ && isSelected(option)}
                   <span class="check-icon">
                     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -827,7 +1367,7 @@
   <!-- Hidden native select for form compatibility -->
   {#if multiple}
     <select {name} {id} {disabled} multiple style="display: none;">
-      {#each value as val}
+      {#each value || [] as val}
         <option value={val} selected>{val}</option>
       {/each}
     </select>
@@ -838,6 +1378,13 @@
       {/if}
     </select>
   {/if}
+
+  <!-- ARIA Live Region for Screen Reader Announcements (v3.0.0) -->
+  {#if enhancedAccessibility && announceChanges}
+    <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {liveRegionMessage}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -845,6 +1392,19 @@
     position: relative;
     width: 100%;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  /* Screen reader only */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
   }
 
   /* Font Size variants */
@@ -868,6 +1428,17 @@
 
   .select-container.rtl {
     direction: rtl;
+  }
+
+  /* v3.0.0 Command Palette Mode */
+  .select-container.command-palette {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    max-width: 90vw;
+    z-index: 10000;
   }
 
   .select-trigger {
@@ -942,6 +1513,24 @@
     border: 1px solid #CCE0FF;
     animation: tagEnter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    cursor: default;
+  }
+
+  /* v3.0.0 Drag & Drop styles */
+  .tag[draggable="true"] {
+    cursor: move;
+    cursor: grab;
+  }
+
+  .tag.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+  }
+
+  .tag.drag-over {
+    border-color: #2684FF;
+    box-shadow: 0 0 0 2px rgba(38, 132, 255, 0.2);
   }
 
   @keyframes tagEnter {
@@ -986,7 +1575,6 @@
     fill: currentColor;
   }
 
-  /* v2.2.0 Tag Overflow */
   .tag-overflow {
     background: #9CA3AF !important;
     color: white !important;
@@ -1087,6 +1675,13 @@
     bottom: calc(100% + 4px);
   }
 
+  /* v3.0.0 Command Palette Dropdown */
+  .dropdown.command-palette-dropdown {
+    box-shadow:
+      0 30px 60px -12px rgba(0, 0, 0, 0.25),
+      0 18px 36px -18px rgba(0, 0, 0, 0.3);
+  }
+
   .search-container {
     padding: 8px;
     border-bottom: 1px solid #f0f0f0;
@@ -1132,7 +1727,6 @@
     background: #b3b3b3;
   }
 
-  /* Select All Container */
   .select-all-container {
     padding: 8px;
     border-bottom: 1px solid #E5E7EB;
@@ -1196,6 +1790,29 @@
     position: sticky;
     top: 0;
     z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* v3.0.0 Collapsible Groups */
+  .option-group-label.collapsible {
+    cursor: pointer;
+    transition: background-color 0.15s;
+    user-select: none;
+  }
+
+  .option-group-label.collapsible:hover {
+    background: #F3F4F6;
+  }
+
+  .group-chevron {
+    fill: currentColor;
+    transition: transform 0.2s;
+  }
+
+  .group-chevron.collapsed {
+    transform: rotate(-90deg);
   }
 
   .option-group .option {
@@ -1214,7 +1831,6 @@
     min-height: 40px;
   }
 
-  /* Option Content */
   .option-content {
     flex: 1;
     display: flex;
@@ -1223,7 +1839,6 @@
     min-width: 0;
   }
 
-  /* Option Icons */
   .option-icon {
     display: flex;
     align-items: center;
@@ -1242,7 +1857,6 @@
     object-fit: cover;
   }
 
-  /* Option Badges */
   .option-badge {
     padding: 2px 8px;
     border-radius: 12px;
@@ -1332,7 +1946,7 @@
     font-size: 0.95em;
   }
 
-  /* v2.2.0 Validation States */
+  /* Validation States */
   .select-trigger.validation-error {
     border-color: #EF4444 !important;
   }

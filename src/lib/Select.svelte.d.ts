@@ -1,8 +1,8 @@
-import { SvelteComponentTyped } from 'svelte';
+import type { Component, Snippet } from 'svelte';
 
 export interface SelectOption {
-  id: string;
-  label: string;
+  id?: string;
+  label?: string;
   value: string | number;
   description?: string;
   disabled?: boolean;
@@ -12,12 +12,13 @@ export interface SelectOption {
   group?: string; // Group name for option grouping
   __isNew__?: boolean;
   __isCreate__?: boolean;
+  __virtualIndex__?: number; // Internal: used for virtual scrolling
 }
 
 export interface SelectChangeEvent {
   value: any;
   option?: SelectOption;
-  action: 'select-option' | 'remove-value' | 'clear' | 'set-value' | 'select-all' | 'deselect-all';
+  action: 'select-option' | 'remove-value' | 'clear' | 'set-value' | 'select-all' | 'deselect-all' | 'reorder' | 'paste';
 }
 
 export interface SelectInputChangeEvent {
@@ -37,6 +38,16 @@ export interface SelectLoadErrorEvent {
   error: Error;
 }
 
+export interface SelectMaxSelectedEvent {
+  max: number;
+  message: string;
+}
+
+export interface SelectKeyboardShortcutEvent {
+  key: string;
+  event: KeyboardEvent;
+}
+
 export interface CustomStyles {
   container?: string;
   control?: string;
@@ -51,7 +62,13 @@ export interface FilterOptionInput {
   data: SelectOption;
 }
 
+export interface KeyboardShortcuts {
+  [key: string]: (event: KeyboardEvent) => void;
+}
+
 export interface SelectProps {
+  // ========== BASIC PROPS ==========
+
   /**
    * Array of options to display
    * @default []
@@ -59,7 +76,8 @@ export interface SelectProps {
   options?: SelectOption[];
 
   /**
-   * Selected value(s). Use single value for single-select, array for multi-select
+   * Selected value(s). Use single value for single-select, array for multi-select.
+   * Supports two-way binding in Svelte 5 with bind:value
    * @default null (single) / [] (multi)
    */
   value?: any;
@@ -172,11 +190,13 @@ export interface SelectProps {
    */
   formatCreateLabel?: (inputValue: string) => string;
 
+  // ========== ASYNC SUPPORT ==========
+
   /**
    * Async function to load options
    * @default null
    */
-  loadOptions?: (inputValue: string) => Promise<SelectOption[]>;
+  loadOptions?: ((inputValue: string) => Promise<SelectOption[]>) | null;
 
   /**
    * Cache loaded options
@@ -189,6 +209,8 @@ export interface SelectProps {
    * @default false
    */
   defaultOptions?: boolean;
+
+  // ========== STYLING & SIZE ==========
 
   /**
    * Font size variant: 'smaller', 'small', 'medium', 'large', 'larger'
@@ -238,6 +260,8 @@ export interface SelectProps {
    */
   menuPosition?: 'absolute' | 'fixed';
 
+  // ========== OPTION CUSTOMIZATION ==========
+
   /**
    * Extract label from option object
    * @default (option) => option.label || option.value
@@ -260,7 +284,9 @@ export interface SelectProps {
    * Custom filter function
    * @default null
    */
-  filterOption?: (option: FilterOptionInput, inputValue: string) => boolean;
+  filterOption?: ((option: FilterOptionInput, inputValue: string) => boolean) | null;
+
+  // ========== GROUPS ==========
 
   /**
    * Enable grouped options
@@ -273,6 +299,8 @@ export interface SelectProps {
    * @default null
    */
   groupBy?: ((option: SelectOption) => string) | null;
+
+  // ========== ADVANCED FEATURES (v2.x) ==========
 
   /**
    * Show Select All / Deselect All button for multi-select
@@ -328,67 +356,7 @@ export interface SelectProps {
    */
   emptySearchText?: string;
 
-  /**
-   * HTML name attribute
-   * @default "svelte-perfect-select"
-   */
-  name?: string;
-
-  /**
-   * HTML id attribute
-   * @default "svelte-perfect-select"
-   */
-  id?: string;
-
-  /**
-   * Auto focus on mount
-   * @default false
-   */
-  autoFocus?: boolean;
-
-  /**
-   * Open menu when component receives focus
-   * @default false
-   */
-  openMenuOnFocus?: boolean;
-
-  /**
-   * Open menu on click
-   * @default true
-   */
-  openMenuOnClick?: boolean;
-
-  /**
-   * Select highlighted option on Tab key
-   * @default true
-   */
-  tabSelectsValue?: boolean;
-
-  /**
-   * Remove last value on Backspace in multi-select
-   * @default true
-   */
-  backspaceRemovesValue?: boolean;
-
-  /**
-   * Clear value on Escape key
-   * @default false
-   */
-  escapeClearsValue?: boolean;
-
-  /**
-   * Message when no options available
-   * @default () => "No options"
-   */
-  noOptionsMessage?: (obj: { inputValue: string }) => string;
-
-  /**
-   * Message during async loading
-   * @default () => "Loading..."
-   */
-  loadingMessage?: () => string;
-
-  // v2.2.0 Features
+  // ========== v2.2.0 FEATURES ==========
 
   /**
    * Maximum number of selections allowed in multi-select mode
@@ -461,67 +429,301 @@ export interface SelectProps {
    * @default false
    */
   loadingMore?: boolean;
+
+  // ========== v3.0.0 NEW FEATURES ==========
+
+  /**
+   * Enable true virtual scrolling for performance with large datasets (10,000+ options)
+   * Only renders visible items in viewport
+   * @default true
+   */
+  enableVirtualScroll?: boolean;
+
+  /**
+   * Number of extra items to render outside viewport for smooth scrolling
+   * @default 5
+   */
+  virtualScrollOverscan?: number;
+
+  /**
+   * Enable drag and drop reordering of multi-select tags
+   * @default false
+   */
+  enableDragDrop?: boolean;
+
+  /**
+   * Enable command palette mode (Cmd/Ctrl+K style interface)
+   * Displays select as a centered modal overlay
+   * @default false
+   */
+  commandPaletteMode?: boolean;
+
+  /**
+   * Keyboard shortcut key for opening command palette (use with Cmd/Ctrl)
+   * @default "k"
+   */
+  commandPaletteKey?: string;
+
+  /**
+   * Enable fuzzy search algorithm for approximate matching
+   * Matches non-consecutive characters (e.g., "slct" matches "Select")
+   * @default false
+   */
+  enableFuzzySearch?: boolean;
+
+  /**
+   * Fuzzy search matching threshold (0-1, lower is more permissive)
+   * @default 0.6
+   */
+  fuzzySearchThreshold?: number;
+
+  /**
+   * Enable copy/paste support for multi-select mode
+   * Paste comma/newline-separated values to add multiple items
+   * Copy selected items to clipboard
+   * @default true
+   */
+  enableCopyPaste?: boolean;
+
+  /**
+   * Delimiter for pasting multiple values
+   * Use "newline" for line-separated, or any string like ","
+   * @default ","
+   */
+  pasteDelimiter?: string | 'newline';
+
+  /**
+   * Enable touch/mobile optimizations
+   * @default true
+   */
+  touchOptimized?: boolean;
+
+  /**
+   * Enable swipe gesture to remove tags on mobile
+   * @default true
+   */
+  swipeToRemove?: boolean;
+
+  /**
+   * Enable collapsible option groups
+   * Click group header to expand/collapse
+   * @default false
+   */
+  collapsibleGroups?: boolean;
+
+  /**
+   * Initial state of groups (expanded or collapsed)
+   * @default true
+   */
+  defaultGroupsExpanded?: boolean;
+
+  /**
+   * Use spring physics animations for smooth, natural motion
+   * @default false
+   */
+  useSpringAnimations?: boolean;
+
+  /**
+   * Spring animation stiffness (higher = snappier)
+   * @default 0.3
+   */
+  springStiffness?: number;
+
+  /**
+   * Spring animation damping (higher = less bouncy)
+   * @default 0.7
+   */
+  springDamping?: number;
+
+  /**
+   * Custom keyboard shortcuts map
+   * Format: { "Ctrl+Shift+A": (event) => {...}, ... }
+   * @default {}
+   */
+  keyboardShortcuts?: KeyboardShortcuts;
+
+  /**
+   * Enable enhanced accessibility features (WCAG 2.1 AAA)
+   * Includes live regions, screen reader announcements, improved focus management
+   * @default true
+   */
+  enhancedAccessibility?: boolean;
+
+  /**
+   * Announce changes to screen readers (selections, removals, etc.)
+   * Requires enhancedAccessibility to be true
+   * @default true
+   */
+  announceChanges?: boolean;
+
+  // ========== CUSTOM RENDERING (Svelte 5 Snippets) ==========
+
+  /**
+   * Custom template for rendering options
+   * Receives (option: SelectOption, isSelected: boolean)
+   * @default null
+   */
+  optionTemplate?: Snippet<[SelectOption, boolean]> | null;
+
+  /**
+   * Custom template for rendering tags in multi-select
+   * Receives (option: SelectOption)
+   * @default null
+   */
+  tagTemplate?: Snippet<[SelectOption]> | null;
+
+  /**
+   * Custom template for empty state / no options
+   * Receives no parameters
+   * @default null
+   */
+  noOptionsTemplate?: Snippet | null;
+
+  // ========== MISC ==========
+
+  /**
+   * HTML name attribute
+   * @default "svelte-perfect-select"
+   */
+  name?: string;
+
+  /**
+   * HTML id attribute
+   * @default "svelte-perfect-select"
+   */
+  id?: string;
+
+  /**
+   * Auto focus on mount
+   * @default false
+   */
+  autoFocus?: boolean;
+
+  /**
+   * Open menu when component receives focus
+   * @default false
+   */
+  openMenuOnFocus?: boolean;
+
+  /**
+   * Open menu on click
+   * @default true
+   */
+  openMenuOnClick?: boolean;
+
+  /**
+   * Select highlighted option on Tab key
+   * @default true
+   */
+  tabSelectsValue?: boolean;
+
+  /**
+   * Remove last value on Backspace in multi-select
+   * @default true
+   */
+  backspaceRemovesValue?: boolean;
+
+  /**
+   * Clear value on Escape key
+   * @default false
+   */
+  escapeClearsValue?: boolean;
+
+  /**
+   * Message when no options available
+   * @default () => "No options"
+   */
+  noOptionsMessage?: () => string;
+
+  /**
+   * Message during async loading
+   * @default () => "Loading..."
+   */
+  loadingMessage?: () => string;
+
+  // ========== EVENT CALLBACKS (Svelte 5 Style) ==========
+
+  /**
+   * Called when selection changes
+   */
+  onChange?: (event: SelectChangeEvent) => void;
+
+  /**
+   * Called when search input changes
+   */
+  onInputChange?: (event: SelectInputChangeEvent) => void;
+
+  /**
+   * Called when component receives focus
+   */
+  onFocus?: () => void;
+
+  /**
+   * Called when component loses focus
+   */
+  onBlur?: () => void;
+
+  /**
+   * Called when dropdown menu opens
+   */
+  onMenuOpen?: () => void;
+
+  /**
+   * Called when dropdown menu closes
+   */
+  onMenuClose?: () => void;
+
+  /**
+   * Called when a new option is created (creatable mode)
+   */
+  onCreateOption?: (event: SelectCreateOptionEvent) => void;
+
+  /**
+   * Called when async options are loaded successfully
+   */
+  onOptionsLoaded?: (event: SelectOptionsLoadedEvent) => void;
+
+  /**
+   * Called when async loading fails
+   */
+  onLoadError?: (event: SelectLoadErrorEvent) => void;
+
+  /**
+   * Called when max selection limit is reached
+   */
+  onMaxSelected?: (event: SelectMaxSelectedEvent) => void;
+
+  /**
+   * Called when clear button is clicked
+   */
+  onClear?: () => void;
+
+  /**
+   * Called when a custom keyboard shortcut is triggered (v3.0.0)
+   */
+  onKeyboardShortcut?: (event: SelectKeyboardShortcutEvent) => void;
 }
 
-export interface SelectEvents {
-  /**
-   * Fired when selection changes
-   */
-  change: CustomEvent<SelectChangeEvent>;
+/**
+ * svelte-perfect-select v3.0.0
+ *
+ * A modern, feature-rich select component for Svelte 5 with react-select API compatibility.
+ *
+ * Features:
+ * - Svelte 5 runes and modern APIs
+ * - Virtual scrolling for 10,000+ options
+ * - Drag & drop tag reordering
+ * - Command palette mode (Cmd+K)
+ * - Fuzzy search
+ * - Custom keyboard shortcuts
+ * - Copy/paste support
+ * - Touch optimizations
+ * - Collapsible groups
+ * - Spring animations
+ * - WCAG 2.1 AAA accessibility
+ * - Custom templates via snippets
+ * - And all v2.x features!
+ */
+declare const Select: Component<SelectProps>;
 
-  /**
-   * Fired when clear button is clicked
-   */
-  clear: CustomEvent<void>;
-
-  /**
-   * Fired when component receives focus
-   */
-  focus: CustomEvent<void>;
-
-  /**
-   * Fired when component loses focus
-   */
-  blur: CustomEvent<void>;
-
-  /**
-   * Fired when dropdown menu opens
-   */
-  menuOpen: CustomEvent<void>;
-
-  /**
-   * Fired when dropdown menu closes
-   */
-  menuClose: CustomEvent<void>;
-
-  /**
-   * Fired when search input changes
-   */
-  inputChange: CustomEvent<SelectInputChangeEvent>;
-
-  /**
-   * Fired when a new option is created (creatable mode)
-   */
-  createOption: CustomEvent<SelectCreateOptionEvent>;
-
-  /**
-   * Fired when async options are loaded successfully
-   */
-  optionsLoaded: CustomEvent<SelectOptionsLoadedEvent>;
-
-  /**
-   * Fired when async loading fails
-   */
-  loadError: CustomEvent<SelectLoadErrorEvent>;
-
-  /**
-   * Fired when max selection limit is reached (v2.2.0)
-   */
-  maxSelected: CustomEvent<{ max: number; message: string }>;
-}
-
-export default class Select extends SvelteComponentTyped<
-  SelectProps,
-  SelectEvents,
-  Record<string, never>
-> {}
+export default Select;
