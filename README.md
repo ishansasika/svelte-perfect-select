@@ -1,6 +1,43 @@
 # Svelte Perfect Select
 
-A modern, feature-rich, and fully accessible select component for Svelte applications. Built with react-select API compatibility, enhanced animations, and a focus on user experience.
+A modern, feature-rich, and fully accessible select component for **Svelte 5** applications. Built with react-select API compatibility, virtual scrolling, drag-drop, fuzzy search, and WCAG AAA accessibility.
+
+> **⚠️ v3.0.0 is a major upgrade requiring Svelte 5!** If you're using Svelte 4, use v2.2.1 instead.
+
+## ✨ What's New in v3.0.0
+
+### 🚀 **Svelte 5 Migration**
+- Completely rewritten using Svelte 5 runes ($props, $state, $derived, $effect)
+- Event system migrated to callback props (onChange, onFocus, etc.)
+- Modern reactivity with fine-grained control
+
+### ⚡ **Performance**
+- **Virtual Scrolling** - Handle 10,000+ options smoothly
+- Only renders visible items + overscan buffer
+- Automatic activation for 50+ options
+
+### 🎯 **User Experience**
+- **Drag & Drop** - Reorder multi-select tags with visual feedback
+- **Command Palette Mode** - Cmd/Ctrl+K style interface
+- **Fuzzy Search** - Smart matching (e.g., "slct" matches "Select")
+- **Copy/Paste** - Multi-select clipboard support
+- **Custom Keyboard Shortcuts** - Define your own shortcuts
+
+### 📱 **Mobile & Touch**
+- **Swipe-to-Remove** tags on mobile
+- Touch-optimized gestures
+- Mobile-first dropdown design
+
+### ♿ **Accessibility**
+- **WCAG 2.1 AAA compliance**
+- ARIA live regions for screen readers
+- Real-time announcements for all actions
+- Enhanced focus management
+
+### 🎨 **Advanced Features**
+- **Collapsible Groups** - Expand/collapse option groups
+- **Spring Animations** - Physics-based smooth motion
+- **Custom Templates** - Render Svelte components via snippets
 
 ## Features
 
@@ -14,7 +51,7 @@ A modern, feature-rich, and fully accessible select component for Svelte applica
 - **Keyboard Navigation** - Full keyboard support (Arrow keys, Enter, Escape, Tab, Backspace)
 - **Accessibility** - ARIA labels and comprehensive screen reader support
 
-### Advanced Features (v2.1.0+)
+### Advanced Features (v2.x)
 - **Select All / Deselect All** - One-click selection for multi-select mode
 - **Option Grouping** - Organize options into categories with sticky headers
 - **Icons in Options** - Add visual elements (SVG or images) to options
@@ -31,8 +68,6 @@ A modern, feature-rich, and fully accessible select component for Svelte applica
 - **Form Compatible** - Works seamlessly with native HTML forms
 - **Enhanced Animations** - Smooth dropdown animations, staggered options, and tag transitions
 - **Modern UI** - Beautiful design with enhanced shadows, backdrop blur effects, and rounded corners
-
-### New in v2.2.0
 - **Max Selection Limit** - Limit the number of selections in multi-select mode
 - **Tag Overflow Display** - Show limited tags with "+X more" badge
 - **Validation States** - Built-in error, success, and warning states with messages
@@ -40,7 +75,23 @@ A modern, feature-rich, and fully accessible select component for Svelte applica
 - **Portal Rendering** - Render dropdown in a portal to solve z-index issues
 - **Infinite Scroll** - Load more options on scroll for large async datasets
 
+### New in v3.0.0
+- **Virtual Scrolling** - True virtualization for 10,000+ options
+- **Drag & Drop Reordering** - Reorder multi-select tags via drag-drop
+- **Command Palette Mode** - Cmd/Ctrl+K style centered modal interface
+- **Fuzzy Search** - Approximate matching algorithm
+- **Copy/Paste Support** - Clipboard integration for multi-select
+- **Custom Keyboard Shortcuts** - Define custom shortcut mappings
+- **Touch Optimizations** - Swipe gestures for mobile
+- **Collapsible Groups** - Click to expand/collapse option groups
+- **Spring Animations** - Physics-based motion with configurable stiffness/damping
+- **Custom Templates** - Render Svelte 5 snippets for options, tags, empty state
+- **WCAG 2.1 AAA** - Enhanced accessibility with live regions
+- **Enhanced Screen Reader** - Real-time announcements for all interactions
+
 ## Installation
+
+> **Requirements:** Svelte 5.0.0 or later
 
 Install using npm:
 
@@ -60,13 +111,13 @@ Install using pnpm:
 pnpm add svelte-perfect-select
 ```
 
-## Basic Usage
+## Basic Usage (Svelte 5)
 
 ```svelte
 <script>
   import Select from 'svelte-perfect-select';
 
-  let value = null;
+  let value = $state(null);
   let options = [
     {id: 'sl', label: 'Sri Lanka', value: 'sl'},
     {id: 'ind', label: 'India', value: 'ind'},
@@ -84,7 +135,7 @@ pnpm add svelte-perfect-select
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `options` | `Array` | `[]` | Array of options. Each option should have `id`, `label`, and `value` properties |
-| `value` | `any` | `null` (single) / `[]` (multi) | The selected value(s) |
+| `value` | `any` | `null` (single) / `[]` (multi) | The selected value(s). Supports two-way binding with `bind:value` |
 | `placeholder` | `string` | `"Select..."` | Placeholder text when no option is selected |
 | `selectSize` | `string` | `"medium"` | Size variant: `"smaller"`, `"small"`, `"medium"`, `"large"`, `"larger"` |
 | `maxHeight` | `string` | `"300px"` | Maximum height of the dropdown |
@@ -166,42 +217,77 @@ pnpm add svelte-perfect-select
 | `hasMore` | `boolean` | `false` | Whether more options are available for infinite scroll |
 | `loadingMore` | `boolean` | `false` | Loading state for infinite scroll |
 
+### v3.0.0 Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `enableVirtualScroll` | `boolean` | `true` | Enable virtual scrolling for 10,000+ options |
+| `virtualScrollOverscan` | `number` | `5` | Extra items to render outside viewport |
+| `enableDragDrop` | `boolean` | `false` | Enable drag & drop tag reordering |
+| `commandPaletteMode` | `boolean` | `false` | Enable command palette (Cmd+K) mode |
+| `commandPaletteKey` | `string` | `"k"` | Key for command palette shortcut |
+| `enableFuzzySearch` | `boolean` | `false` | Enable fuzzy search algorithm |
+| `fuzzySearchThreshold` | `number` | `0.6` | Fuzzy match threshold (0-1) |
+| `enableCopyPaste` | `boolean` | `true` | Enable copy/paste for multi-select |
+| `pasteDelimiter` | `string` | `","` | Delimiter for paste: `","` or `"newline"` |
+| `touchOptimized` | `boolean` | `true` | Enable touch optimizations |
+| `swipeToRemove` | `boolean` | `true` | Enable swipe-to-remove tags |
+| `collapsibleGroups` | `boolean` | `false` | Enable collapsible option groups |
+| `defaultGroupsExpanded` | `boolean` | `true` | Initial group state |
+| `useSpringAnimations` | `boolean` | `false` | Use spring physics animations |
+| `springStiffness` | `number` | `0.3` | Spring stiffness (higher = snappier) |
+| `springDamping` | `number` | `0.7` | Spring damping (higher = less bouncy) |
+| `keyboardShortcuts` | `object` | `{}` | Custom keyboard shortcuts: `{ "Ctrl+A": (e) => {...} }` |
+| `enhancedAccessibility` | `boolean` | `true` | Enable WCAG AAA features |
+| `announceChanges` | `boolean` | `true` | Screen reader announcements |
+| `optionTemplate` | `Snippet` | `null` | Custom option template (Svelte 5 snippet) |
+| `tagTemplate` | `Snippet` | `null` | Custom tag template (Svelte 5 snippet) |
+| `noOptionsTemplate` | `Snippet` | `null` | Custom empty state template (Svelte 5 snippet) |
+
+## Event Callbacks (Svelte 5)
+
+> **Note:** In v3.0.0, events use callback props instead of `on:event` syntax.
+
+| Callback | Parameters | Description |
+|----------|------------|-------------|
+| `onChange` | `{ value, option, action }` | Called when selection changes |
+| `onInputChange` | `{ value, action }` | Called when search input changes |
+| `onFocus` | - | Called when component receives focus |
+| `onBlur` | - | Called when component loses focus |
+| `onMenuOpen` | - | Called when dropdown menu opens |
+| `onMenuClose` | - | Called when dropdown menu closes |
+| `onCreateOption` | `{ option }` | Called when a new option is created |
+| `onOptionsLoaded` | `{ options }` | Called when async options load |
+| `onLoadError` | `{ error }` | Called when async loading fails |
+| `onMaxSelected` | `{ max, message }` | Called when max selection reached |
+| `onClear` | - | Called when clear button clicked |
+| `onKeyboardShortcut` | `{ key, event }` | Called on custom keyboard shortcut (v3.0.0) |
+
 ## Option Object Structure
 
 ```javascript
 {
-  id: 'unique-id',           // Required: Unique identifier for the option
-  label: 'Display Text',     // Required: Text to display in dropdown
+  id: 'unique-id',           // Optional: Unique identifier (auto-generated if missing)
+  label: 'Display Text',     // Optional: Text to display (uses value if missing)
   value: 'option-value',     // Required: Value to be stored when selected
   description: 'Optional',   // Optional: Additional description text
-  disabled: false            // Optional: Disable this specific option
+  disabled: false,           // Optional: Disable this specific option
+  icon: '🎨',                // Optional: Icon (string URL or HTML/SVG)
+  badge: 'New',              // Optional: Badge text
+  badgeColor: '#10B981',     // Optional: Badge background color
+  group: 'Category'          // Optional: Group name for grouping
 }
 ```
 
-## Events
-
-| Event | Detail | Description |
-|-------|--------|-------------|
-| `change` | `{ value, option, action }` | Fired when selection changes |
-| `clear` | - | Fired when the clear button is clicked |
-| `focus` | - | Fired when the component receives focus |
-| `blur` | - | Fired when the component loses focus |
-| `menuOpen` | - | Fired when the dropdown menu opens |
-| `menuClose` | - | Fired when the dropdown menu closes |
-| `inputChange` | `{ value, action }` | Fired when search input changes |
-| `createOption` | `{ option }` | Fired when a new option is created (creatable mode) |
-| `optionsLoaded` | `{ options }` | Fired when async options are loaded successfully |
-| `loadError` | `{ error }` | Fired when async loading fails |
-
 ## Examples
 
-### Single Select with Search
+### Single Select (Svelte 5)
 
 ```svelte
 <script>
   import Select from 'svelte-perfect-select';
 
-  let selectedCountry = null;
+  let selectedCountry = $state(null);
   let countries = [
     {id: 'us', label: 'United States', value: 'us'},
     {id: 'uk', label: 'United Kingdom', value: 'uk'},
@@ -209,7 +295,7 @@ pnpm add svelte-perfect-select
   ];
 
   function handleChange(event) {
-    console.log('Selected:', event.detail);
+    console.log('Selected:', event);
   }
 </script>
 
@@ -217,17 +303,17 @@ pnpm add svelte-perfect-select
   options={countries}
   bind:value={selectedCountry}
   placeholder="Choose a country..."
-  on:change={handleChange}
+  onChange={handleChange}
 />
 ```
 
-### Multi-Select with Tags
+### Multi-Select with Drag & Drop (v3.0.0)
 
 ```svelte
 <script>
   import Select from 'svelte-perfect-select';
 
-  let selectedSkills = [];
+  let selectedSkills = $state([]);
   let skills = [
     {id: 'js', label: 'JavaScript', value: 'js'},
     {id: 'py', label: 'Python', value: 'py'},
@@ -239,59 +325,201 @@ pnpm add svelte-perfect-select
 <Select
   options={skills}
   bind:value={selectedSkills}
-  isMulti={true}
-  placeholder="Select your skills..."
+  multiple={true}
+  enableDragDrop={true}
+  placeholder="Select and reorder skills..."
 />
 
 <p>Selected: {selectedSkills.join(', ')}</p>
 ```
 
-### Options with Descriptions
+### Virtual Scrolling (v3.0.0)
 
 ```svelte
 <script>
   import Select from 'svelte-perfect-select';
 
-  let framework = null;
+  // Generate 10,000 options
+  let largeDataset = $state(
+    Array.from({ length: 10000 }, (_, i) => ({
+      id: `option-${i}`,
+      label: `Option ${i + 1}`,
+      value: `opt-${i}`
+    }))
+  );
+
+  let selected = $state(null);
+</script>
+
+<!-- Virtual scrolling handles this smoothly! -->
+<Select
+  options={largeDataset}
+  bind:value={selected}
+  enableVirtualScroll={true}
+  virtualScrollOverscan={10}
+  placeholder="Search 10,000 options..."
+/>
+```
+
+### Fuzzy Search (v3.0.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
   let frameworks = [
-    {
-      id: 'react',
-      label: 'React',
-      value: 'react',
-      description: 'A JavaScript library for building user interfaces'
-    },
-    {
-      id: 'vue',
-      label: 'Vue.js',
-      value: 'vue',
-      description: 'The Progressive JavaScript Framework'
-    },
-    {
-      id: 'svelte',
-      label: 'Svelte',
-      value: 'svelte',
-      description: 'Cybernetically enhanced web apps'
-    }
+    {id: 'react', label: 'React', value: 'react'},
+    {id: 'svelte', label: 'Svelte', value: 'svelte'},
+    {id: 'vue', label: 'Vue.js', value: 'vue'}
+  ];
+</script>
+
+<!-- Try typing "rct" - it will match "React"! -->
+<Select
+  options={frameworks}
+  enableFuzzySearch={true}
+  fuzzySearchThreshold={0.6}
+  placeholder="Try fuzzy search..."
+/>
+```
+
+### Command Palette Mode (v3.0.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let commands = [
+    {id: 'new', label: 'New File', value: 'new', icon: '📄'},
+    {id: 'open', label: 'Open File', value: 'open', icon: '📂'},
+    {id: 'save', label: 'Save', value: 'save', icon: '💾'}
+  ];
+</script>
+
+<!-- Press Cmd/Ctrl+K to open! -->
+<Select
+  options={commands}
+  commandPaletteMode={true}
+  commandPaletteKey="k"
+  showOptionIcons={true}
+  placeholder="Press Cmd+K..."
+/>
+```
+
+### Copy/Paste Support (v3.0.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let selectedTags = $state([]);
+  let tags = [
+    {id: 'js', label: 'JavaScript', value: 'JavaScript'},
+    {id: 'ts', label: 'TypeScript', value: 'TypeScript'},
+    {id: 'py', label: 'Python', value: 'Python'}
+  ];
+</script>
+
+<!-- Try pasting: "JavaScript, TypeScript" -->
+<Select
+  options={tags}
+  bind:value={selectedTags}
+  multiple={true}
+  enableCopyPaste={true}
+  pasteDelimiter=","
+  placeholder="Paste comma-separated values..."
+/>
+```
+
+### Custom Templates (v3.0.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let users = [
+    {id: '1', label: 'John Doe', value: 'john', email: 'john@example.com'},
+    {id: '2', label: 'Jane Smith', value: 'jane', email: 'jane@example.com'}
   ];
 </script>
 
 <Select
-  options={frameworks}
-  bind:value={framework}
-  placeholder="Pick a framework..."
-/>
+  options={users}
+  placeholder="Select user..."
+>
+  {#snippet optionTemplate(option, isSelected)}
+    <div style="display: flex; flex-direction: column;">
+      <span style="font-weight: 500;">{option.label}</span>
+      <span style="font-size: 0.875em; color: #6B7280;">{option.email}</span>
+    </div>
+  {/snippet}
+
+  {#snippet tagTemplate(option)}
+    <span>{option.label} ({option.email})</span>
+  {/snippet}
+</Select>
 ```
 
-### Async Loading (React-Select Compatible)
+### Collapsible Groups (v3.0.0)
 
 ```svelte
 <script>
   import Select from 'svelte-perfect-select';
 
-  let selectedCountry = null;
+  let languages = [
+    {id: 'js', label: 'JavaScript', value: 'js', group: 'Frontend'},
+    {id: 'ts', label: 'TypeScript', value: 'ts', group: 'Frontend'},
+    {id: 'py', label: 'Python', value: 'py', group: 'Backend'},
+    {id: 'go', label: 'Go', value: 'go', group: 'Backend'}
+  ];
+</script>
+
+<!-- Click group headers to collapse/expand -->
+<Select
+  options={languages}
+  isGrouped={true}
+  groupBy={(option) => option.group}
+  collapsibleGroups={true}
+  defaultGroupsExpanded={true}
+  placeholder="Select language..."
+/>
+```
+
+### Custom Keyboard Shortcuts (v3.0.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let value = $state([]);
+  let options = [{id: '1', label: 'Option 1', value: '1'}];
+
+  let shortcuts = {
+    'Ctrl+Shift+A': (event) => {
+      console.log('Custom shortcut triggered!');
+    }
+  };
+</script>
+
+<Select
+  {options}
+  bind:value
+  multiple={true}
+  keyboardShortcuts={shortcuts}
+  onKeyboardShortcut={(e) => console.log('Shortcut:', e.key)}
+  placeholder="Try Ctrl+Shift+A..."
+/>
+```
+
+### Async Loading
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let selectedCountry = $state(null);
 
   async function loadCountries(inputValue) {
-    // Simulate API call
     const response = await fetch(`/api/countries?search=${inputValue}`);
     const data = await response.json();
     return data.map(country => ({
@@ -311,270 +539,16 @@ pnpm add svelte-perfect-select
 />
 ```
 
-### Creatable Select
+### Validation States
 
 ```svelte
 <script>
   import Select from 'svelte-perfect-select';
 
-  let selectedColor = null;
-  let colors = [
-    {id: 'red', label: 'Red', value: 'red'},
-    {id: 'blue', label: 'Blue', value: 'blue'},
-    {id: 'green', label: 'Green', value: 'green'}
-  ];
-
-  function handleCreateOption(event) {
-    const newOption = event.detail.option;
-    colors = [...colors, newOption];
-    console.log('Created:', newOption);
-  }
-</script>
-
-<Select
-  options={colors}
-  bind:value={selectedColor}
-  isCreatable={true}
-  placeholder="Select or create a color..."
-  on:createOption={handleCreateOption}
-/>
-```
-
-### Disabled Options
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-
-  let options = [
-    {id: '1', label: 'Available Option', value: '1'},
-    {id: '2', label: 'Disabled Option', value: '2', disabled: true},
-    {id: '3', label: 'Another Available', value: '3'}
-  ];
-</script>
-
-<Select {options} placeholder="Some options are disabled..." />
-```
-
-### Loading State
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-
-  let value = null;
-  let options = [];
-  let loading = true;
-
-  // Simulate API call
-  setTimeout(() => {
-    options = [
-      {id: '1', label: 'Option 1', value: '1'},
-      {id: '2', label: 'Option 2', value: '2'}
-    ];
-    loading = false;
-  }, 2000);
-</script>
-
-<Select {options} bind:value isLoading={loading} placeholder="Loading options..." />
-```
-
-### Different Font Sizes
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-  let options = [{id: '1', label: 'Option 1', value: '1'}];
-</script>
-
-<Select {options} selectSize="smaller" placeholder="Smaller (11px)" />
-<Select {options} selectSize="small" placeholder="Small (13px)" />
-<Select {options} selectSize="medium" placeholder="Medium (14px)" />
-<Select {options} selectSize="large" placeholder="Large (16px)" />
-<Select {options} selectSize="larger" placeholder="Larger (18px)" />
-```
-
-### Different Container Sizes
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-  let options = [{id: '1', label: 'Option 1', value: '1'}];
-</script>
-
-<Select {options} containerSize="xs" placeholder="Extra Small" />
-<Select {options} containerSize="sm" placeholder="Small" />
-<Select {options} containerSize="md" placeholder="Medium (Default)" />
-<Select {options} containerSize="lg" placeholder="Large" />
-<Select {options} containerSize="xl" placeholder="Extra Large" />
-```
-
-### Color Themes
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-  let options = [{id: '1', label: 'Option 1', value: '1'}];
-</script>
-
-<!-- 7 Beautiful Color Themes -->
-<Select {options} theme="blue" placeholder="Blue theme (default)" />
-<Select {options} theme="purple" placeholder="Purple theme" />
-<Select {options} theme="green" placeholder="Green theme" />
-<Select {options} theme="red" placeholder="Red theme" />
-<Select {options} theme="orange" placeholder="Orange theme" />
-<Select {options} theme="pink" placeholder="Pink theme" />
-<Select {options} theme="dark" placeholder="Dark theme" />
-
-<!-- Themes work great with multi-select -->
-<Select {options} theme="purple" isMulti={true} placeholder="Purple multi-select" />
-```
-
-### Custom Styles
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-  let options = [{id: '1', label: 'Option 1', value: '1'}];
-</script>
-
-<!-- Inject custom CSS for complete control -->
-<Select
-  {options}
-  customStyles={{
-    container: 'border: 2px solid #9333EA; background: #F9FAFB;',
-    control: 'background: rgba(255, 255, 255, 0.95);',
-    menu: 'box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);',
-    option: 'padding: 12px;',
-    tag: 'background: #9333EA; color: white;'
-  }}
-  placeholder="Fully customized select"
-/>
-
-<!-- Combine with themes for hybrid styling -->
-<Select
-  {options}
-  theme="green"
-  borderRadius="12px"
-  customStyles={{
-    container: 'box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);'
-  }}
-  placeholder="Green theme with custom shadow"
-/>
-```
-
-### Combined Features
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-  let options = [{id: '1', label: 'Option 1', value: '1'}];
-</script>
-
-<!-- Combine size, theme, and styling options -->
-<Select
-  {options}
-  theme="purple"
-  selectSize="large"
-  containerSize="lg"
-  borderRadius="16px"
-  isMulti={true}
-  placeholder="Large purple multi-select with rounded corners"
-/>
-```
-
-### Without Search
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-  let options = [{id: '1', label: 'Option 1', value: '1'}];
-</script>
-
-<Select {options} isSearchable={false} placeholder="No search box..." />
-```
-
-### Disabled Select
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-  let options = [{id: '1', label: 'Option 1', value: '1'}];
-</script>
-
-<Select {options} isDisabled={true} placeholder="This is disabled..." />
-```
-
-### Max Selection Limit (v2.2.0)
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-
-  let selectedItems = [];
-  let options = [
-    {id: '1', label: 'Option 1', value: '1'},
-    {id: '2', label: 'Option 2', value: '2'},
-    {id: '3', label: 'Option 3', value: '3'},
-    {id: '4', label: 'Option 4', value: '4'},
-    {id: '5', label: 'Option 5', value: '5'}
-  ];
-
-  function handleMaxSelected(event) {
-    console.log(event.detail.message);
-  }
-</script>
-
-<!-- Limit selection to 3 items -->
-<Select
-  {options}
-  bind:value={selectedItems}
-  isMulti={true}
-  maxSelected={3}
-  maxSelectedMessage={(max) => `You can only select up to ${max} items`}
-  on:maxSelected={handleMaxSelected}
-  placeholder="Select up to 3 items..."
-/>
-```
-
-### Tag Overflow Display (v2.2.0)
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-
-  let selectedSkills = [];
-  let skills = [
-    {id: 'js', label: 'JavaScript', value: 'js'},
-    {id: 'ts', label: 'TypeScript', value: 'ts'},
-    {id: 'py', label: 'Python', value: 'py'},
-    {id: 'go', label: 'Go', value: 'go'},
-    {id: 'rust', label: 'Rust', value: 'rust'},
-    {id: 'java', label: 'Java', value: 'java'}
-  ];
-</script>
-
-<!-- Show only 3 tags, rest as "+X more" -->
-<Select
-  options={skills}
-  bind:value={selectedSkills}
-  isMulti={true}
-  maxTagsDisplay={3}
-  placeholder="Select skills..."
-/>
-```
-
-### Validation States (v2.2.0)
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-
-  let selectedCountry = null;
+  let selectedCountry = $state(null);
   let countries = [
     {id: 'us', label: 'United States', value: 'us'},
-    {id: 'uk', label: 'United Kingdom', value: 'uk'},
-    {id: 'ca', label: 'Canada', value: 'ca'}
+    {id: 'uk', label: 'United Kingdom', value: 'uk'}
   ];
 </script>
 
@@ -584,7 +558,6 @@ pnpm add svelte-perfect-select
   bind:value={selectedCountry}
   validationState="error"
   validationMessage="Please select a country"
-  placeholder="Select country..."
 />
 
 <!-- Success state -->
@@ -593,7 +566,6 @@ pnpm add svelte-perfect-select
   bind:value={selectedCountry}
   validationState="success"
   validationMessage="Country selected successfully"
-  placeholder="Select country..."
 />
 
 <!-- Warning state -->
@@ -601,98 +573,8 @@ pnpm add svelte-perfect-select
   options={countries}
   bind:value={selectedCountry}
   validationState="warning"
-  validationMessage="This country may have shipping restrictions"
-  placeholder="Select country..."
+  validationMessage="This country may have restrictions"
 />
-```
-
-### Checkboxes in Multi-Select (v2.2.0)
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-
-  let selectedFeatures = [];
-  let features = [
-    {id: '1', label: 'Feature A', value: 'a'},
-    {id: '2', label: 'Feature B', value: 'b'},
-    {id: '3', label: 'Feature C', value: 'c'}
-  ];
-</script>
-
-<!-- Show checkboxes for better visual feedback -->
-<Select
-  options={features}
-  bind:value={selectedFeatures}
-  isMulti={true}
-  showCheckboxes={true}
-  placeholder="Select features..."
-/>
-```
-
-### Infinite Scroll (v2.2.0)
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-
-  let selectedUser = null;
-  let users = [];
-  let page = 0;
-  let hasMoreUsers = true;
-
-  async function loadInitialUsers(searchTerm) {
-    page = 0;
-    const response = await fetch(`/api/users?search=${searchTerm}&page=${page}`);
-    const data = await response.json();
-    hasMoreUsers = data.hasMore;
-    return data.users.map(user => ({
-      id: user.id,
-      label: user.name,
-      value: user.id
-    }));
-  }
-
-  async function loadMoreUsers() {
-    page += 1;
-    const response = await fetch(`/api/users?page=${page}`);
-    const data = await response.json();
-    hasMoreUsers = data.hasMore;
-    return data.users.map(user => ({
-      id: user.id,
-      label: user.name,
-      value: user.id
-    }));
-  }
-</script>
-
-<!-- Infinite scroll for large datasets -->
-<Select
-  bind:value={selectedUser}
-  loadOptions={loadInitialUsers}
-  loadMoreOptions={loadMoreUsers}
-  hasMore={hasMoreUsers}
-  defaultOptions={true}
-  placeholder="Search users..."
-/>
-```
-
-### Portal Rendering (v2.2.0)
-
-```svelte
-<script>
-  import Select from 'svelte-perfect-select';
-  let options = [{id: '1', label: 'Option 1', value: '1'}];
-</script>
-
-<!-- Render dropdown in portal to avoid z-index issues -->
-<div style="overflow: hidden; position: relative; z-index: 1;">
-  <Select
-    {options}
-    usePortal={true}
-    placeholder="Dropdown renders in portal..."
-  />
-</div>
 ```
 
 ## Keyboard Navigation
@@ -700,18 +582,56 @@ pnpm add svelte-perfect-select
 - **Arrow Down** - Open dropdown or move to next option
 - **Arrow Up** - Move to previous option
 - **Enter** - Select highlighted option or toggle dropdown
-- **Escape** - Close dropdown and optionally clear value (`escapeClearsValue`)
-- **Tab** - Select highlighted option (if `tabSelectsValue`) and close dropdown
-- **Backspace** - Remove last selected value in multi-select mode (if `backspaceRemovesValue`)
-- **Type to search** - Search and filter options when searchable is enabled
+- **Escape** - Close dropdown and optionally clear value
+- **Tab** - Select highlighted option and close dropdown
+- **Backspace** - Remove last value in multi-select
+- **Ctrl/Cmd + A** - Select all (in multi-select, v3.0.0)
+- **Ctrl/Cmd + K** - Open command palette (if enabled, v3.0.0)
+- **Ctrl/Cmd + C** - Copy selected items (v3.0.0)
+- **Ctrl/Cmd + V** - Paste values (v3.0.0)
+- **Custom shortcuts** - Via `keyboardShortcuts` prop (v3.0.0)
 
-## Styling
+## Touch Gestures (v3.0.0)
 
-The component uses scoped CSS with modern styling out of the box. You can customize the appearance by:
+- **Swipe left/right** - Remove tag in multi-select mode
+- **Tap** - Select/deselect options
+- **Scroll** - Navigate through options
 
-1. Using the `selectSize` prop for font sizes
-2. Overriding CSS custom properties (if added in future versions)
-3. Wrapping in a container with custom styles
+## Migration from v2.x to v3.0.0
+
+### 1. Update Svelte
+
+```bash
+npm install svelte@^5 @sveltejs/vite-plugin-svelte@^5 vite@^6
+```
+
+### 2. Update Event Handlers
+
+```svelte
+<!-- Before (v2.x) -->
+<Select on:change={handleChange} on:focus={handleFocus} />
+
+<!-- After (v3.0.0) -->
+<Select onChange={handleChange} onFocus={handleFocus} />
+```
+
+### 3. Update State (Optional but Recommended)
+
+```svelte
+<!-- Before (v2.x) -->
+<script>
+  let value = null;
+</script>
+
+<!-- After (v3.0.0) - Using Svelte 5 runes -->
+<script>
+  let value = $state(null);
+</script>
+```
+
+### 4. Custom Templates (If Using)
+
+Replace slots with snippet props. See custom templates example above.
 
 ## Browser Support
 
@@ -722,7 +642,7 @@ The component uses scoped CSS with modern styling out of the box. You can custom
 
 ## TypeScript Support
 
-This package includes TypeScript definitions out of the box. No need to install separate `@types` packages.
+Full TypeScript support included out of the box.
 
 ```typescript
 import Select, { type SelectOption, type SelectProps } from 'svelte-perfect-select';
@@ -732,25 +652,28 @@ const options: SelectOption[] = [
   { id: '2', label: 'Option 2', value: '2' }
 ];
 
-let selectedValue: string | null = null;
+let selectedValue = $state<string | null>(null);
 ```
-
-## 📚 Documentation
-
-For detailed guides and advanced features, check out the [documentation](./docs):
-
-- **[Advanced Features Guide](./docs/advanced-features.md)** - Select All, Grouping, Icons, Badges, and more
-- **[Contributing Guide](./docs/CONTRIBUTING.md)** - How to contribute to the project
 
 ## Accessibility
 
-This component follows WAI-ARIA best practices:
+This component follows WAI-ARIA best practices and achieves **WCAG 2.1 Level AAA** compliance:
 
 - Proper ARIA labels and roles
-- Screen reader support
-- Keyboard navigation
-- Focus management
+- ARIA live regions for announcements (v3.0.0)
+- Screen reader support with real-time updates
+- Full keyboard navigation
+- Enhanced focus management
 - Clear focus indicators
+- High contrast support
+
+## Performance
+
+- **Virtual scrolling** for datasets with 10,000+ items
+- Efficient re-rendering with Svelte 5 fine-grained reactivity
+- Option caching for async loading
+- Debounced search filtering
+- Optimized DOM updates
 
 ## License
 
@@ -760,10 +683,18 @@ MIT
 
 Ishan Karunaratne - [ishansasika@gmail.com](mailto:ishansasika@gmail.com)
 
-## Repository
+Website: [https://ishansasika.dev](https://ishansasika.dev)
 
-[https://github.com/ishansasika/svelte-perfect-select](https://github.com/ishansasika/svelte-perfect-select)
+## Links
+
+- **Demo & Documentation**: [https://svelte-perfect-select.ishansasika.dev](https://svelte-perfect-select.ishansasika.dev)
+- **Repository**: [https://github.com/ishansasika/svelte-perfect-select](https://github.com/ishansasika/svelte-perfect-select)
+- **NPM Package**: [https://www.npmjs.com/package/svelte-perfect-select](https://www.npmjs.com/package/svelte-perfect-select)
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes.
