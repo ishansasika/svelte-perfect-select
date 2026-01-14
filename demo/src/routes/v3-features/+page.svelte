@@ -111,21 +111,146 @@
 
   // Touch Gestures Demo
   let touchTags = $state(['tag1', 'tag2', 'tag3']);
+
+  // ========== v3.1.0 DEMOS ==========
+
+  // Search Highlighting Demo
+  let highlightOptions = [
+    { id: 'javascript', label: 'JavaScript', value: 'javascript' },
+    { id: 'typescript', label: 'TypeScript', value: 'typescript' },
+    { id: 'python', label: 'Python', value: 'python' },
+    { id: 'java', label: 'Java', value: 'java' },
+    { id: 'csharp', label: 'C Sharp', value: 'csharp' },
+    { id: 'ruby', label: 'Ruby', value: 'ruby' },
+    { id: 'rust', label: 'Rust', value: 'rust' },
+    { id: 'golang', label: 'Go Language', value: 'golang' }
+  ];
+  let highlightValue = $state(null);
+
+  // Option Descriptions Demo
+  let descriptionOptions = [
+    { id: 'react', label: 'React', value: 'react', description: 'A JavaScript library for building user interfaces' },
+    { id: 'vue', label: 'Vue.js', value: 'vue', description: 'The Progressive JavaScript Framework' },
+    { id: 'svelte', label: 'Svelte', value: 'svelte', description: 'Cybernetically enhanced web apps' },
+    { id: 'angular', label: 'Angular', value: 'angular', description: 'Platform for building mobile and desktop apps' },
+    { id: 'solid', label: 'SolidJS', value: 'solid', description: 'Simple and performant reactivity for building UIs' }
+  ];
+  let descriptionValue = $state(null);
+
+  // Auto Dropdown Position Demo
+  let positionOptions = [
+    { id: '1', label: 'Option 1', value: '1' },
+    { id: '2', label: 'Option 2', value: '2' },
+    { id: '3', label: 'Option 3', value: '3' },
+    { id: '4', label: 'Option 4', value: '4' },
+    { id: '5', label: 'Option 5', value: '5' }
+  ];
+  let positionValue = $state(null);
 </script>
 
 <svelte:head>
-  <title>v3.0.0 Features - Svelte Perfect Select</title>
+  <title>v3.x Features - Svelte Perfect Select</title>
 </svelte:head>
 
 <div class="max-w-6xl mx-auto p-8 space-y-16">
   <header class="text-center mb-12">
     <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-      v3.0.0 Features
+      v3.x Features
     </h1>
     <p class="text-xl text-gray-600">
-      Explore all the amazing new features in Svelte Perfect Select v3.0.0
+      Explore all the amazing new features in Svelte Perfect Select v3.x
     </p>
   </header>
+
+  <!-- ========== v3.1.0 FEATURES ========== -->
+  <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 mb-8">
+    <h2 class="text-2xl font-bold text-green-800 mb-2">🆕 New in v3.1.0</h2>
+    <p class="text-green-700">Search highlighting, auto dropdown positioning, and enhanced option descriptions</p>
+  </div>
+
+  <!-- Search Highlighting -->
+  <section class="space-y-4">
+    <div class="flex items-center gap-3">
+      <span class="text-4xl">🔍</span>
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800">Search Highlighting</h2>
+        <p class="text-gray-600">Matched text is highlighted in yellow as you type</p>
+      </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <p class="text-sm text-gray-600 mb-4">
+        Try searching for "java" or "script" to see highlighting in action!
+      </p>
+      <Select
+        options={highlightOptions}
+        bind:value={highlightValue}
+        highlightSearchMatch={true}
+        placeholder="Search programming languages..."
+        theme="green"
+      />
+      {#if highlightValue}
+        <p class="mt-4 text-sm text-gray-700">Selected: <code class="bg-gray-100 px-2 py-1 rounded">{highlightValue}</code></p>
+      {/if}
+    </div>
+  </section>
+
+  <!-- Option Descriptions -->
+  <section class="space-y-4">
+    <div class="flex items-center gap-3">
+      <span class="text-4xl">📝</span>
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800">Option Descriptions</h2>
+        <p class="text-gray-600">Show helpful descriptions below option labels</p>
+      </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <p class="text-sm text-gray-600 mb-4">
+        Each option displays a subtitle description for more context.
+      </p>
+      <Select
+        options={descriptionOptions}
+        bind:value={descriptionValue}
+        showOptionDescriptions={true}
+        placeholder="Choose a framework..."
+        theme="purple"
+      />
+      {#if descriptionValue}
+        <p class="mt-4 text-sm text-gray-700">Selected: <code class="bg-gray-100 px-2 py-1 rounded">{descriptionValue}</code></p>
+      {/if}
+    </div>
+  </section>
+
+  <!-- Auto Dropdown Position -->
+  <section class="space-y-4">
+    <div class="flex items-center gap-3">
+      <span class="text-4xl">📍</span>
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800">Auto Dropdown Position</h2>
+        <p class="text-gray-600">Smart positioning based on available viewport space</p>
+      </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <p class="text-sm text-gray-600 mb-4">
+        Scroll down and try opening this select near the bottom of the page - it will open upward!
+      </p>
+      <Select
+        options={positionOptions}
+        bind:value={positionValue}
+        menuPlacement="auto"
+        placeholder="Auto-positioned dropdown..."
+        theme="orange"
+      />
+      {#if positionValue}
+        <p class="mt-4 text-sm text-gray-700">Selected: <code class="bg-gray-100 px-2 py-1 rounded">{positionValue}</code></p>
+      {/if}
+    </div>
+  </section>
+
+  <!-- Divider for v3.0.0 features -->
+  <div class="border-t-2 border-gray-200 pt-8">
+    <h2 class="text-2xl font-bold text-gray-700 mb-2">v3.0.0 Features</h2>
+    <p class="text-gray-500">The major features introduced in version 3.0.0</p>
+  </div>
 
   <!-- Virtual Scrolling -->
   <section class="space-y-4">
