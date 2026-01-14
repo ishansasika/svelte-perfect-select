@@ -98,6 +98,11 @@
     enhancedAccessibility = true, // WCAG 2.1 AAA features
     announceChanges = true, // Screen reader announcements
 
+    // v3.1.0 NEW FEATURES
+    highlightSearchMatch = true, // Highlight matched text in options
+    highlightClassName = "search-highlight", // CSS class for highlighted text
+    showOptionDescriptions = true, // Show option.description if available
+
     // Custom rendering (Svelte 5 snippets)
     optionTemplate = null, // Custom option template snippet
     tagTemplate = null, // Custom tag template snippet
@@ -165,6 +170,9 @@
   let swipingTagIndex = $state(null);
   let liveRegionMessage = $state("");
   let commandPaletteOpen = $state(false);
+
+  // v3.1.0 State
+  let calculatedDropdownPosition = $state("bottom"); // 'top' or 'bottom'
 
   // Spring animations for smooth interactions
   const dropdownY = spring(0, { stiffness: springStiffness, damping: springDamping });
@@ -340,6 +348,48 @@
     return normalizedScore >= fuzzySearchThreshold;
   }
 
+  // ========== v3.1.0 SEARCH HIGHLIGHTING ==========
+  function highlightText(text, term) {
+    if (!highlightSearchMatch || !term || !text) return text;
+
+    const lowerText = text.toLowerCase();
+    const lowerTerm = term.toLowerCase();
+    const index = lowerText.indexOf(lowerTerm);
+
+    if (index === -1) return text;
+
+    const before = text.slice(0, index);
+    const match = text.slice(index, index + term.length);
+    const after = text.slice(index + term.length);
+
+    return { before, match, after, hasMatch: true };
+  }
+
+  // ========== v3.1.0 DROPDOWN POSITION DETECTION ==========
+  function calculateDropdownPosition() {
+    if (menuPlacement !== 'auto') {
+      calculatedDropdownPosition = menuPlacement === 'top' ? 'top' : 'bottom';
+      return;
+    }
+
+    if (!selectContainer) {
+      calculatedDropdownPosition = 'bottom';
+      return;
+    }
+
+    const rect = selectContainer.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const dropdownHeight = parseInt(maxHeight) || 300;
+
+    // If not enough space below but enough above, show on top
+    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+      calculatedDropdownPosition = 'top';
+    } else {
+      calculatedDropdownPosition = 'bottom';
+    }
+  }
+
   // ========== FILTER OPTIONS ==========
   function getFilteredOptions(opts, term) {
     if (!searchable || !term) return opts;
@@ -398,6 +448,9 @@
     isOpen = !isOpen;
 
     if (isOpen) {
+      // v3.1.0: Calculate dropdown position before opening
+      calculateDropdownPosition();
+
       if (useSpringAnimations) {
         dropdownY.set(-10);
         dropdownY.set(0);
@@ -1041,7 +1094,8 @@
 
   {#if isOpen}
     <div
-      class="dropdown {menuPlacement}"
+      class="dropdown"
+      class:top={calculatedDropdownPosition === 'top'}
       class:fixed={menuPosition === 'fixed'}
       class:command-palette-dropdown={commandPaletteMode && commandPaletteOpen}
       style="max-height: {maxHeight}"
@@ -1175,8 +1229,19 @@
                           </span>
                         {/if}
                         <div class="option-content">
-                          <span class="option-label">{getOptionLabel(option)}</span>
-                          {#if option.description}
+                          {#if highlightSearchMatch && searchTerm}
+                            {@const highlighted = highlightText(getOptionLabel(option), searchTerm)}
+                            <span class="option-label">
+                              {#if typeof highlighted === 'object' && highlighted.hasMatch}
+                                {highlighted.before}<mark class={highlightClassName}>{highlighted.match}</mark>{highlighted.after}
+                              {:else}
+                                {getOptionLabel(option)}
+                              {/if}
+                            </span>
+                          {:else}
+                            <span class="option-label">{getOptionLabel(option)}</span>
+                          {/if}
+                          {#if showOptionDescriptions && option.description}
                             <span class="option-description">{option.description}</span>
                           {/if}
                         </div>
@@ -1248,14 +1313,21 @@
                         </span>
                       {/if}
                       <div class="option-content">
-                        <span class="option-label">
-                          {#if option.__isCreate__}
-                            {formatCreateLabel(option.value)}
-                          {:else}
-                            {getOptionLabel(option)}
-                          {/if}
-                        </span>
-                        {#if option.description && !option.__isCreate__}
+                        {#if option.__isCreate__}
+                          <span class="option-label">{formatCreateLabel(option.value)}</span>
+                        {:else if highlightSearchMatch && searchTerm}
+                          {@const highlighted = highlightText(getOptionLabel(option), searchTerm)}
+                          <span class="option-label">
+                            {#if typeof highlighted === 'object' && highlighted.hasMatch}
+                              {highlighted.before}<mark class={highlightClassName}>{highlighted.match}</mark>{highlighted.after}
+                            {:else}
+                              {getOptionLabel(option)}
+                            {/if}
+                          </span>
+                        {:else}
+                          <span class="option-label">{getOptionLabel(option)}</span>
+                        {/if}
+                        {#if showOptionDescriptions && option.description && !option.__isCreate__}
                           <span class="option-description">{option.description}</span>
                         {/if}
                       </div>
@@ -1323,14 +1395,21 @@
                     </span>
                   {/if}
                   <div class="option-content">
-                    <span class="option-label">
-                      {#if option.__isCreate__}
-                        {formatCreateLabel(option.value)}
-                      {:else}
-                        {getOptionLabel(option)}
-                      {/if}
-                    </span>
-                    {#if option.description && !option.__isCreate__}
+                    {#if option.__isCreate__}
+                      <span class="option-label">{formatCreateLabel(option.value)}</span>
+                    {:else if highlightSearchMatch && searchTerm}
+                      {@const highlighted = highlightText(getOptionLabel(option), searchTerm)}
+                      <span class="option-label">
+                        {#if typeof highlighted === 'object' && highlighted.hasMatch}
+                          {highlighted.before}<mark class={highlightClassName}>{highlighted.match}</mark>{highlighted.after}
+                        {:else}
+                          {getOptionLabel(option)}
+                        {/if}
+                      </span>
+                    {:else}
+                      <span class="option-label">{getOptionLabel(option)}</span>
+                    {/if}
+                    {#if showOptionDescriptions && option.description && !option.__isCreate__}
                       <span class="option-description">{option.description}</span>
                     {/if}
                   </div>
@@ -1925,6 +2004,21 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     line-height: 1.3;
+  }
+
+  /* v3.1.0 Search Highlight */
+  .search-highlight,
+  mark.search-highlight {
+    background-color: #FEF08A;
+    color: inherit;
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 600;
+  }
+
+  .option.highlighted .search-highlight,
+  .option.highlighted mark.search-highlight {
+    background-color: #FDE047;
   }
 
   .check-icon {

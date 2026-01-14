@@ -556,6 +556,26 @@ export interface SelectProps {
    */
   announceChanges?: boolean;
 
+  // ========== v3.1.0 FEATURES ==========
+
+  /**
+   * Enable search term highlighting in option labels
+   * @default true
+   */
+  highlightSearchMatch?: boolean;
+
+  /**
+   * CSS class name for highlighted search text
+   * @default "search-highlight"
+   */
+  highlightClassName?: string;
+
+  /**
+   * Show option descriptions when available
+   * @default true
+   */
+  showOptionDescriptions?: boolean;
+
   // ========== CUSTOM RENDERING (Svelte 5 Snippets) ==========
 
   /**
