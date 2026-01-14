@@ -287,6 +287,31 @@ export const SELECT_METADATA: ComponentMetadata = {
 			description: 'Screen reader announcements (v3.0.0)',
 			defaultValue: true,
 			category: 'v3-features'
+		},
+		// v3.1.0 Features
+		{
+			name: 'highlightSearchMatch',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Highlight matched text in options (v3.1.0)',
+			defaultValue: true,
+			category: 'v3-features'
+		},
+		{
+			name: 'highlightClassName',
+			type: 'string',
+			control: { type: 'text' },
+			description: 'CSS class for highlighted text (v3.1.0)',
+			defaultValue: 'search-highlight',
+			category: 'v3-features'
+		},
+		{
+			name: 'showOptionDescriptions',
+			type: 'boolean',
+			control: { type: 'boolean' },
+			description: 'Show option descriptions (v3.1.0)',
+			defaultValue: true,
+			category: 'v3-features'
 		}
 	],
 	examples: [],
