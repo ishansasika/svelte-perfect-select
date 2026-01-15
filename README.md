@@ -2,7 +2,24 @@
 
 A modern, feature-rich, and fully accessible select component for **Svelte 5** applications. Built with react-select API compatibility, virtual scrolling, drag-drop, fuzzy search, and WCAG AAA accessibility.
 
-> **⚠️ v3.0.0 is a major upgrade requiring Svelte 5!** If you're using Svelte 4, use v2.2.1 instead.
+> **⚠️ v3.x requires Svelte 5!** If you're using Svelte 4, use v2.2.1 instead.
+
+## ✨ What's New in v3.1.0
+
+### 🔍 **Search Highlighting**
+- Matched text is highlighted in yellow as you type
+- Configurable via `highlightSearchMatch` prop (default: `true`)
+- Custom CSS class via `highlightClassName` prop
+
+### 📍 **Auto Dropdown Position**
+- Smart positioning based on available viewport space
+- Opens above input when insufficient space below
+- `menuPlacement="auto"` now properly calculates position
+
+### 📝 **Enhanced Option Descriptions**
+- Show descriptions below option labels
+- Controlled via `showOptionDescriptions` prop (default: `true`)
+- Options with `description` property display subtitle text
 
 ## ✨ What's New in v3.0.0
 
@@ -243,6 +260,14 @@ pnpm add svelte-perfect-select
 | `optionTemplate` | `Snippet` | `null` | Custom option template (Svelte 5 snippet) |
 | `tagTemplate` | `Snippet` | `null` | Custom tag template (Svelte 5 snippet) |
 | `noOptionsTemplate` | `Snippet` | `null` | Custom empty state template (Svelte 5 snippet) |
+
+### v3.1.0 Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `highlightSearchMatch` | `boolean` | `true` | Highlight matched text in option labels |
+| `highlightClassName` | `string` | `"search-highlight"` | CSS class for highlighted text |
+| `showOptionDescriptions` | `boolean` | `true` | Show option.description if available |
 
 ## Event Callbacks (Svelte 5)
 
@@ -508,6 +533,70 @@ pnpm add svelte-perfect-select
   keyboardShortcuts={shortcuts}
   onKeyboardShortcut={(e) => console.log('Shortcut:', e.key)}
   placeholder="Try Ctrl+Shift+A..."
+/>
+```
+
+### Search Highlighting (v3.1.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let value = $state(null);
+  let options = [
+    { id: '1', label: 'JavaScript', value: 'js' },
+    { id: '2', label: 'TypeScript', value: 'ts' },
+    { id: '3', label: 'Java', value: 'java' }
+  ];
+</script>
+
+<Select
+  {options}
+  bind:value
+  highlightSearchMatch={true}
+  highlightClassName="search-highlight"
+  placeholder="Type to see highlighting..."
+/>
+```
+
+### Option Descriptions (v3.1.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let value = $state(null);
+  let options = [
+    { id: '1', label: 'React', value: 'react', description: 'A JavaScript library for building UIs' },
+    { id: '2', label: 'Vue', value: 'vue', description: 'The Progressive JavaScript Framework' },
+    { id: '3', label: 'Svelte', value: 'svelte', description: 'Cybernetically enhanced web apps' }
+  ];
+</script>
+
+<Select
+  {options}
+  bind:value
+  showOptionDescriptions={true}
+  placeholder="Select a framework..."
+/>
+```
+
+### Auto Dropdown Position (v3.1.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let value = $state(null);
+  let options = [{id: '1', label: 'Option 1', value: '1'}];
+</script>
+
+<!-- Dropdown will open above if near bottom of viewport -->
+<Select
+  {options}
+  bind:value
+  menuPlacement="auto"
+  placeholder="Auto-positioned..."
 />
 ```
 

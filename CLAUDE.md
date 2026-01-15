@@ -83,8 +83,8 @@ Everything else (demo, docs, build configs) is excluded via `.npmignore`.
 
 The component maintains **react-select API compatibility** while adding Svelte-specific enhancements:
 - Supports both naming conventions: `isMulti`/`multiple`, `isSearchable`/`searchable`, etc.
-- Event dispatchers use Svelte's `createEventDispatcher` pattern
-- Two-way binding with `bind:value`
+- **v3.0.0+**: Events use callback props (`onChange`, `onFocus`, etc.) instead of `createEventDispatcher`
+- Two-way binding with `bind:value` (Svelte 5 `$bindable`)
 - All react-select core features: async, creatable, multi-select, search, etc.
 
 ## Theme System
@@ -106,6 +106,28 @@ Located in same component, controlled by feature flags:
 - **Icons/Badges**: `showOptionIcons` and `showOptionBadges` with option object schema extensions
 - **Size Variants**: `selectSize` (font), `containerSize` (physical dimensions), `borderRadius`
 
+## v3.0.0 Features (Svelte 5)
+
+Major rewrite for Svelte 5:
+- **Runes**: `$state`, `$derived`, `$effect`, `$props`, `$bindable`
+- **Virtual Scrolling**: `enableVirtualScroll` for 10,000+ options
+- **Drag & Drop**: `enableDragDrop` for tag reordering
+- **Fuzzy Search**: `enableFuzzySearch` with configurable threshold
+- **Command Palette**: `commandPaletteMode` for Cmd+K interface
+- **Copy/Paste**: `enableCopyPaste` for multi-select clipboard support
+- **Touch Gestures**: `touchOptimized`, `swipeToRemove`
+- **Collapsible Groups**: `collapsibleGroups` for option groups
+- **Spring Animations**: `useSpringAnimations` with physics-based motion
+- **Custom Templates**: Svelte 5 snippets (`optionTemplate`, `tagTemplate`)
+- **WCAG AAA**: `enhancedAccessibility`, `announceChanges`
+
+## v3.1.0 Features
+
+Enhancements to v3.0.0:
+- **Search Highlighting**: `highlightSearchMatch` highlights matched text in options
+- **Auto Dropdown Position**: `menuPlacement="auto"` detects viewport space
+- **Option Descriptions**: `showOptionDescriptions` displays subtitle text
+
 ## Testing & Demo Development
 
 When working on features:
@@ -117,7 +139,7 @@ When working on features:
 ## Important Constraints
 
 - **No Breaking Changes**: Maintain react-select API compatibility
-- **Zero Dependencies**: Keep the library dependency-free (only peer dependency: svelte ^4.0.0)
+- **Zero Dependencies**: Keep the library dependency-free (only peer dependency: svelte ^5.0.0)
 - **Single File Component**: All functionality stays in Select.svelte unless there's a compelling reason to split
 - **Accessibility**: Maintain ARIA labels, keyboard navigation, and screen reader support
 - **TypeScript**: Update `Select.svelte.d.ts` when adding/changing props

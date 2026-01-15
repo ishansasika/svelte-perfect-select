@@ -72,6 +72,28 @@
       description: 'Enhanced accessibility with live regions',
       version: 'v3.0.0',
       highlight: true
+    },
+    // v3.1.0 Features
+    {
+      icon: '🔍',
+      title: 'Search Highlighting',
+      description: 'Matched text highlighted in yellow as you type',
+      version: 'v3.1.0',
+      highlight: true
+    },
+    {
+      icon: '📍',
+      title: 'Auto Position',
+      description: 'Smart dropdown positioning based on viewport',
+      version: 'v3.1.0',
+      highlight: true
+    },
+    {
+      icon: '📝',
+      title: 'Option Descriptions',
+      description: 'Show subtitle descriptions for options',
+      version: 'v3.1.0',
+      highlight: true
     }
   ];
 
@@ -139,11 +161,11 @@
       ✨ Now with Svelte 5 Runes
     </div>
     <h1 class="text-5xl md:text-6xl font-bold mb-6">
-      Svelte Perfect Select <span class="text-yellow-300">v3.0.0</span>
+      Svelte Perfect Select <span class="text-yellow-300">v3.1.0</span>
     </h1>
     <p class="text-lg md:text-xl mb-8 max-w-3xl mx-auto">
       The most advanced select component for Svelte 5. Virtual scrolling, drag-drop, fuzzy search,
-      and WCAG AAA accessibility. Zero dependencies, 100% customizable.
+      search highlighting, and WCAG AAA accessibility. Zero dependencies, 100% customizable.
     </p>
 
     <!-- Live Demo -->
@@ -164,7 +186,7 @@
         href="/v3-features"
         class="px-8 py-3 bg-white text-purple-600 rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105"
       >
-        🚀 Explore v3.0.0 Features
+        🚀 Explore v3.x Features
       </a>
       <a
         href="https://github.com/ishansasika/svelte-perfect-select"
@@ -186,12 +208,12 @@
   </div>
 </section>
 
-<!-- What's New in v3.0.0 -->
+<!-- What's New in v3.x -->
 <section class="py-16 bg-gradient-to-br from-blue-50 to-purple-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
       <h2 class="text-4xl font-bold text-gray-800 mb-4">
-        What's New in v3.0.0 🎉
+        What's New in v3.x 🎉
       </h2>
       <p class="text-xl text-gray-600 max-w-2xl mx-auto">
         The biggest release ever with 12 major new features

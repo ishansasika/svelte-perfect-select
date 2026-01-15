@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-01-15
+
+### 🎉 New Features
+
+#### Search Highlighting
+- **Highlight matched text** in option labels when searching
+- Configurable via `highlightSearchMatch` prop (default: `true`)
+- Custom CSS class via `highlightClassName` prop (default: `"search-highlight"`)
+- Yellow highlight with bold text for better visibility
+- Enhanced highlighting on hover state
+
+```svelte
+<Select
+  options={options}
+  highlightSearchMatch={true}
+  highlightClassName="my-highlight"
+/>
+```
+
+#### Auto Dropdown Position
+- **Smart dropdown positioning** - automatically detects available space
+- Opens above input when insufficient space below
+- `menuPlacement` prop now properly supports `"auto"`, `"top"`, and `"bottom"`
+- Calculates position based on viewport and dropdown height
+
+```svelte
+<Select
+  options={options}
+  menuPlacement="auto"
+/>
+```
+
+#### Enhanced Option Descriptions
+- **Show descriptions** below option labels
+- Controlled via `showOptionDescriptions` prop (default: `true`)
+- Options with `description` property will display subtitle text
+- Styled with smaller, muted text for visual hierarchy
+
+```svelte
+<script>
+  const options = [
+    { value: 'react', label: 'React', description: 'A JavaScript library for building user interfaces' },
+    { value: 'vue', label: 'Vue.js', description: 'The Progressive JavaScript Framework' },
+    { value: 'svelte', label: 'Svelte', description: 'Cybernetically enhanced web apps' }
+  ];
+</script>
+
+<Select {options} showOptionDescriptions={true} />
+```
+
+### 📝 Documentation
+- Updated TypeScript definitions with v3.1.0 props
+- Added examples for new features
+
+---
+
 ## [3.0.0] - 2026-01-09
 
 ### 🚨 BREAKING CHANGES
