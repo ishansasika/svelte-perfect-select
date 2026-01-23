@@ -183,11 +183,11 @@
       ✨ Now with Svelte 5 Runes
     </div>
     <h1 class="text-5xl md:text-6xl font-bold mb-6">
-      Svelte Perfect Select <span class="text-yellow-300">v3.1.0</span>
+      Svelte Perfect Select <span class="text-yellow-300">v3.2.0</span>
     </h1>
     <p class="text-lg md:text-xl mb-8 max-w-3xl mx-auto">
       The most advanced select component for Svelte 5. Virtual scrolling, drag-drop, fuzzy search,
-      search highlighting, and WCAG AAA accessibility. Zero dependencies, 100% customizable.
+      group selection, avatar support, and WCAG AAA accessibility. Zero dependencies, 100% customizable.
     </p>
 
     <!-- Live Demo -->
