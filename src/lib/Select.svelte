@@ -103,6 +103,11 @@
     highlightClassName = "search-highlight", // CSS class for highlighted text
     showOptionDescriptions = true, // Show option.description if available
 
+    // v3.2.0 NEW FEATURES
+    groupSelectsAll = false, // Enable group selection/deselection
+    showAvatar = false, // Show avatars from option.image or option.avatar
+    floatingLabel = false, // Material Design-style floating label
+
     // Custom rendering (Svelte 5 snippets)
     optionTemplate = null, // Custom option template snippet
     tagTemplate = null, // Custom tag template snippet
@@ -202,6 +207,11 @@
       ? selectedOptions.slice(0, maxTagsDisplay)
       : selectedOptions;
   });
+
+  // v3.2.0 - Floating label state
+  const shouldFloatLabel = $derived(
+    floatingLabel && (isOpen || (value && (multiple ? value.length > 0 : true)))
+  );
 
   const hiddenTagsCount = $derived.by(() => {
     return maxTagsDisplay && selectedOptions?.length > maxTagsDisplay
@@ -584,6 +594,60 @@
     }
   }
 
+  // ========== GROUP SELECTION (v3.2.0) ==========
+  function toggleGroupSelection(groupName, groupOptions) {
+    if (!multiple || !groupSelectsAll) return;
+
+    const groupValues = groupOptions
+      .filter(opt => !isOptionDisabled(opt))
+      .map(opt => getOptionValue(opt));
+
+    // Check if all group options are selected
+    const allGroupSelected = groupValues.every(val => value.includes(val));
+
+    if (allGroupSelected) {
+      // Deselect all in group
+      value = value.filter(v => !groupValues.includes(v));
+      if (announceChanges) {
+        liveRegionMessage = `Deselected all items in group ${groupName}`;
+      }
+    } else {
+      // Select all in group (respecting maxSelected limit)
+      const newValues = [...new Set([...value, ...groupValues])];
+      if (maxSelected && newValues.length > maxSelected) {
+        showMaxSelectionWarning = true;
+        onMaxSelected?.({ max: maxSelected, message: maxSelectedMessage(maxSelected) });
+        setTimeout(() => {
+          showMaxSelectionWarning = false;
+        }, 3000);
+        return;
+      }
+      value = newValues;
+      if (announceChanges) {
+        liveRegionMessage = `Selected all items in group ${groupName}`;
+      }
+    }
+
+    onChange?.({ value, action: allGroupSelected ? 'deselect-all' : 'select-all' });
+  }
+
+  function isGroupFullySelected(groupOptions) {
+    if (!multiple) return false;
+    const groupValues = groupOptions
+      .filter(opt => !isOptionDisabled(opt))
+      .map(opt => getOptionValue(opt));
+    return groupValues.length > 0 && groupValues.every(val => value.includes(val));
+  }
+
+  function isGroupPartiallySelected(groupOptions) {
+    if (!multiple) return false;
+    const groupValues = groupOptions
+      .filter(opt => !isOptionDisabled(opt))
+      .map(opt => getOptionValue(opt));
+    const selectedCount = groupValues.filter(val => value.includes(val)).length;
+    return selectedCount > 0 && selectedCount < groupValues.length;
+  }
+
   // ========== SEARCH ==========
   async function handleSearch(event) {
     searchTerm = event.target.value;
@@ -954,6 +1018,7 @@
   class:disabled
   class:rtl={isRtl}
   class:command-palette={commandPaletteMode && commandPaletteOpen}
+  class:floating-label-mode={floatingLabel}
   bind:this={selectContainer}
   onkeydown={handleKeydown}
   onpaste={handlePaste}
@@ -965,6 +1030,12 @@
   onfocus={handleFocus}
   style="{customStyles.container || ''}"
 >
+  {#if floatingLabel}
+    <label class="floating-label" class:floated={shouldFloatLabel}>
+      {placeholder}
+    </label>
+  {/if}
+
   <div
     class="select-trigger"
     class:open={isOpen}
@@ -1011,6 +1082,11 @@
               {#if tagTemplate}
                 {@render tagTemplate(option)}
               {:else}
+                {#if showAvatar && (option.image || option.avatar)}
+                  <span class="tag-avatar">
+                    <img src={option.image || option.avatar} alt="" class="tag-avatar-img" />
+                  </span>
+                {/if}
                 <span class="tag-label">{getOptionLabel(option)}</span>
               {/if}
 
@@ -1172,11 +1248,33 @@
                   class="option-group-label"
                   class:collapsible={collapsibleGroups}
                   class:collapsed={isCollapsed}
-                  onclick={() => toggleGroupCollapse(groupName)}
-                  role={collapsibleGroups ? 'button' : 'presentation'}
+                  class:selectable={groupSelectsAll && multiple}
+                  onclick={(e) => {
+                    if (groupSelectsAll && multiple && !e.target.closest('.group-checkbox-wrapper')) {
+                      toggleGroupSelection(groupName, groupOptions);
+                    } else if (collapsibleGroups) {
+                      toggleGroupCollapse(groupName);
+                    }
+                  }}
+                  role={collapsibleGroups || (groupSelectsAll && multiple) ? 'button' : 'presentation'}
                   aria-expanded={collapsibleGroups ? !isCollapsed : undefined}
-                  tabindex={collapsibleGroups ? 0 : -1}
+                  tabindex={collapsibleGroups || (groupSelectsAll && multiple) ? 0 : -1}
                 >
+                  {#if multiple && groupSelectsAll}
+                    <span class="group-checkbox-wrapper" onclick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isGroupFullySelected(groupOptions)}
+                        indeterminate={isGroupPartiallySelected(groupOptions)}
+                        onclick={(e) => {
+                          e.stopPropagation();
+                          toggleGroupSelection(groupName, groupOptions);
+                        }}
+                        tabindex="-1"
+                        aria-label={`Select all in ${groupName}`}
+                      />
+                    </span>
+                  {/if}
                   {#if collapsibleGroups}
                     <svg class="group-chevron" class:collapsed={isCollapsed} width="12" height="12" viewBox="0 0 20 20">
                       <path d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"></path>
@@ -1219,7 +1317,11 @@
                       {#if optionTemplate}
                         {@render optionTemplate(option, isSelected(option))}
                       {:else}
-                        {#if showOptionIcons && option.icon}
+                        {#if showAvatar && (option.image || option.avatar)}
+                          <span class="option-avatar">
+                            <img src={option.image || option.avatar} alt="" class="option-avatar-img" />
+                          </span>
+                        {:else if showOptionIcons && option.icon}
                           <span class="option-icon">
                             {#if typeof option.icon === 'string'}
                               <img src={option.icon} alt="" class="option-icon-img" />
@@ -1303,7 +1405,11 @@
                     {#if optionTemplate && !option.__isCreate__}
                       {@render optionTemplate(option, isSelected(option))}
                     {:else}
-                      {#if showOptionIcons && option.icon && !option.__isCreate__}
+                      {#if showAvatar && (option.image || option.avatar) && !option.__isCreate__}
+                        <span class="option-avatar">
+                          <img src={option.image || option.avatar} alt="" class="option-avatar-img" />
+                        </span>
+                      {:else if showOptionIcons && option.icon && !option.__isCreate__}
                         <span class="option-icon">
                           {#if typeof option.icon === 'string'}
                             <img src={option.icon} alt="" class="option-icon-img" />
@@ -1385,7 +1491,11 @@
                 {#if optionTemplate && !option.__isCreate__}
                   {@render optionTemplate(option, isSelected(option))}
                 {:else}
-                  {#if showOptionIcons && option.icon && !option.__isCreate__}
+                  {#if showAvatar && (option.image || option.avatar) && !option.__isCreate__}
+                    <span class="option-avatar">
+                      <img src={option.image || option.avatar} alt="" class="option-avatar-img" />
+                    </span>
+                  {:else if showOptionIcons && option.icon && !option.__isCreate__}
                     <span class="option-icon">
                       {#if typeof option.icon === 'string'}
                         <img src={option.icon} alt="" class="option-icon-img" />
@@ -2175,4 +2285,96 @@
   .theme-dark .check-icon, .theme-dark .option.create-option { color: #1F2937; }
   .theme-dark .spinner { border-top-color: #1F2937; }
   .theme-dark .search-input:focus { border-color: #1F2937; box-shadow: 0 0 0 1px #1F2937; }
+
+  /* ========== v3.2.0 NEW FEATURES STYLES ========== */
+
+  /* Avatar Support */
+  .option-avatar,
+  .tag-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #F3F4F6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tag-avatar {
+    width: 20px;
+    height: 20px;
+  }
+
+  .option-avatar-img,
+  .tag-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Group Selection Checkbox */
+  .option-group-label.selectable {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .option-group-label.selectable:hover {
+    background: #F9FAFB;
+  }
+
+  .group-checkbox-wrapper {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+  }
+
+  .group-checkbox-wrapper input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #2684FF;
+  }
+
+  /* Floating Label Mode */
+  .select-container.floating-label-mode {
+    position: relative;
+    padding-top: 8px;
+  }
+
+  .floating-label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: white;
+    padding: 0 4px;
+    color: #6B7280;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 14px;
+    z-index: 1;
+  }
+
+  .floating-label.floated {
+    top: 0;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #2684FF;
+    font-weight: 500;
+  }
+
+  .select-container.floating-label-mode .select-trigger {
+    padding-top: 10px;
+  }
+
+  .select-container.floating-label-mode .placeholder {
+    opacity: 0;
+  }
+
+  .select-container.floating-label-mode .floating-label.floated + .select-trigger .placeholder {
+    opacity: 1;
+  }
 </style>
