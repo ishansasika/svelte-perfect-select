@@ -94,6 +94,28 @@
       description: 'Show subtitle descriptions for options',
       version: 'v3.1.0',
       highlight: true
+    },
+    // v3.2.0 Features
+    {
+      icon: '☑️',
+      title: 'Group Selection',
+      description: 'Select or deselect entire groups with a single click',
+      version: 'v3.2.0',
+      highlight: true
+    },
+    {
+      icon: '👤',
+      title: 'Native Avatars',
+      description: 'Display circular avatars in options and tags',
+      version: 'v3.2.0',
+      highlight: true
+    },
+    {
+      icon: '🏷️',
+      title: 'Floating Label',
+      description: 'Material Design-style animated placeholder',
+      version: 'v3.2.0',
+      highlight: true
     }
   ];
 
