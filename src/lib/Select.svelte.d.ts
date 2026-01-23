@@ -10,6 +10,8 @@ export interface SelectOption {
   badge?: string;
   badgeColor?: string;
   group?: string; // Group name for option grouping
+  image?: string; // v3.2.0: Avatar/image URL
+  avatar?: string; // v3.2.0: Avatar/image URL (alias for image)
   __isNew__?: boolean;
   __isCreate__?: boolean;
   __virtualIndex__?: number; // Internal: used for virtual scrolling
@@ -575,6 +577,29 @@ export interface SelectProps {
    * @default true
    */
   showOptionDescriptions?: boolean;
+
+  // ========== v3.2.0 FEATURES ==========
+
+  /**
+   * Enable group selection - click group header to select/deselect all options in group
+   * Only works in multi-select mode with grouped options
+   * @default false
+   */
+  groupSelectsAll?: boolean;
+
+  /**
+   * Show avatars from option.image or option.avatar fields
+   * Displays circular avatar images in both options and tags
+   * @default false
+   */
+  showAvatar?: boolean;
+
+  /**
+   * Enable Material Design-style floating label
+   * Placeholder animates up when focused or has value
+   * @default false
+   */
+  floatingLabel?: boolean;
 
   // ========== CUSTOM RENDERING (Svelte 5 Snippets) ==========
 
