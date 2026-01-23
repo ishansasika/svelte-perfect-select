@@ -4,6 +4,26 @@ A modern, feature-rich, and fully accessible select component for **Svelte 5** a
 
 > **⚠️ v3.x requires Svelte 5!** If you're using Svelte 4, use v2.2.1 instead.
 
+## ✨ What's New in v3.2.0
+
+### ☑️ **Group Selection**
+- Select or deselect entire groups with a single click
+- Works with multi-select mode and grouped options
+- Respects `maxSelected` limits and validation
+- Enable with `groupSelectsAll={true}`
+
+### 👤 **Native Avatar Support**
+- No more custom templates for simple user lists!
+- Just add `image` or `avatar` to your option objects
+- Automatically renders circular avatars in options and tags
+- Controlled via `showAvatar={true}`
+
+### 🏷️ **Floating Label Mode**
+- Material Design-style floating labels
+- Placeholder animates up when focused or has value
+- Use `floatingLabel={true}` to enable
+- Fully customizable via CSS
+
 ## ✨ What's New in v3.1.0
 
 ### 🔍 **Search Highlighting**
@@ -91,6 +111,16 @@ A modern, feature-rich, and fully accessible select component for **Svelte 5** a
 - **Configurable Checkboxes** - Optional checkboxes for multi-select options
 - **Portal Rendering** - Render dropdown in a portal to solve z-index issues
 - **Infinite Scroll** - Load more options on scroll for large async datasets
+
+### New in v3.2.0
+- **Group Selection** - Select/deselect entire groups with checkbox in group header
+- **Native Avatar Support** - Display circular avatars from `image` or `avatar` fields
+- **Floating Label** - Material Design-style animated placeholder labels
+
+### New in v3.1.0
+- **Search Highlighting** - Matched text highlighted as you type
+- **Auto Dropdown Position** - Smart positioning based on viewport space
+- **Option Descriptions** - Show subtitle descriptions for options
 
 ### New in v3.0.0
 - **Virtual Scrolling** - True virtualization for 10,000+ options
@@ -261,6 +291,14 @@ pnpm add svelte-perfect-select
 | `tagTemplate` | `Snippet` | `null` | Custom tag template (Svelte 5 snippet) |
 | `noOptionsTemplate` | `Snippet` | `null` | Custom empty state template (Svelte 5 snippet) |
 
+### v3.2.0 Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `groupSelectsAll` | `boolean` | `false` | Enable group selection - click group header to select/deselect all options in group (only works with multi-select + grouped options) |
+| `showAvatar` | `boolean` | `false` | Show avatars from `option.image` or `option.avatar` fields - displays circular avatars in both options and tags |
+| `floatingLabel` | `boolean` | `false` | Enable Material Design-style floating label - placeholder animates up when focused or has value |
+
 ### v3.1.0 Props
 
 | Prop | Type | Default | Description |
@@ -300,7 +338,9 @@ pnpm add svelte-perfect-select
   icon: '🎨',                // Optional: Icon (string URL or HTML/SVG)
   badge: 'New',              // Optional: Badge text
   badgeColor: '#10B981',     // Optional: Badge background color
-  group: 'Category'          // Optional: Group name for grouping
+  group: 'Category',         // Optional: Group name for grouping
+  image: 'https://...',      // Optional (v3.2.0): Avatar/image URL
+  avatar: 'https://...'      // Optional (v3.2.0): Avatar/image URL (alias for image)
 }
 ```
 
@@ -329,6 +369,80 @@ pnpm add svelte-perfect-select
   bind:value={selectedCountry}
   placeholder="Choose a country..."
   onChange={handleChange}
+/>
+```
+
+### Group Selection (v3.2.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let teamMembers = [
+    {id: '1', label: 'Alice Johnson', value: 'alice', group: 'Engineering'},
+    {id: '2', label: 'Bob Smith', value: 'bob', group: 'Engineering'},
+    {id: '3', label: 'Diana Prince', value: 'diana', group: 'Design'},
+    {id: '4', label: 'Eve Wilson', value: 'eve', group: 'Design'}
+  ];
+  let selectedMembers = $state([]);
+</script>
+
+<!-- Click group header checkbox to select all in that group -->
+<Select
+  options={teamMembers}
+  bind:value={selectedMembers}
+  isGrouped={true}
+  groupBy={(option) => option.group}
+  multiple={true}
+  groupSelectsAll={true}
+  placeholder="Select team members..."
+/>
+```
+
+### Native Avatar Support (v3.2.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let users = [
+    {id: '1', label: 'John Doe', value: 'john', avatar: 'https://i.pravatar.cc/150?img=1'},
+    {id: '2', label: 'Jane Smith', value: 'jane', image: 'https://i.pravatar.cc/150?img=5'},
+    {id: '3', label: 'Bob Johnson', value: 'bob', avatar: 'https://i.pravatar.cc/150?img=12'}
+  ];
+  let selectedUsers = $state([]);
+</script>
+
+<!-- Avatars automatically displayed in options and tags -->
+<Select
+  options={users}
+  bind:value={selectedUsers}
+  multiple={true}
+  showAvatar={true}
+  placeholder="Select users..."
+/>
+```
+
+### Floating Label (v3.2.0)
+
+```svelte
+<script>
+  import Select from 'svelte-perfect-select';
+
+  let frameworks = [
+    {id: 'react', label: 'React', value: 'react'},
+    {id: 'vue', label: 'Vue.js', value: 'vue'},
+    {id: 'svelte', label: 'Svelte', value: 'svelte'}
+  ];
+  let selected = $state(null);
+</script>
+
+<!-- Material Design-style animated label -->
+<Select
+  options={frameworks}
+  bind:value={selected}
+  floatingLabel={true}
+  placeholder="Choose your framework"
 />
 ```
 

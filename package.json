@@ -1,7 +1,7 @@
 {
   "name": "svelte-perfect-select",
   "private": false,
-  "version": "3.1.0",
+  "version": "3.2.0",
   "type": "module",
   "description": "A modern, feature-rich select component for Svelte 5 with react-select API compatibility, virtual scrolling, drag-drop, fuzzy search, and WCAG AAA accessibility",
   "main": "index.js",
