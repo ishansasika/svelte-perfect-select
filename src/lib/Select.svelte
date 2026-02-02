@@ -210,7 +210,7 @@
 
   // v3.2.0 - Floating label state
   const shouldFloatLabel = $derived(
-    floatingLabel && (isOpen || (value && (multiple ? value.length > 0 : true)))
+    floatingLabel && (isOpen || (value != null && (multiple ? (Array.isArray(value) && value.length > 0) : true)))
   );
 
   const hiddenTagsCount = $derived.by(() => {
@@ -632,7 +632,7 @@
   }
 
   function isGroupFullySelected(groupOptions) {
-    if (!multiple) return false;
+    if (!multiple || !value || !Array.isArray(value)) return false;
     const groupValues = groupOptions
       .filter(opt => !isOptionDisabled(opt))
       .map(opt => getOptionValue(opt));
@@ -640,7 +640,7 @@
   }
 
   function isGroupPartiallySelected(groupOptions) {
-    if (!multiple) return false;
+    if (!multiple || !value || !Array.isArray(value)) return false;
     const groupValues = groupOptions
       .filter(opt => !isOptionDisabled(opt))
       .map(opt => getOptionValue(opt));
@@ -977,6 +977,16 @@
     collapsedGroups = newCollapsed;
   }
 
+  // ========== INDETERMINATE CHECKBOX ACTION (v3.2.0) ==========
+  function indeterminate(node, isIndeterminate) {
+    node.indeterminate = isIndeterminate;
+    return {
+      update(isIndeterminate) {
+        node.indeterminate = isIndeterminate;
+      }
+    };
+  }
+
   // ========== PORTAL ==========
   function createPortal() {
     if (!usePortal) return;
@@ -1265,7 +1275,7 @@
                       <input
                         type="checkbox"
                         checked={isGroupFullySelected(groupOptions)}
-                        indeterminate={isGroupPartiallySelected(groupOptions)}
+                        use:indeterminate={isGroupPartiallySelected(groupOptions)}
                         onclick={(e) => {
                           e.stopPropagation();
                           toggleGroupSelection(groupName, groupOptions);
