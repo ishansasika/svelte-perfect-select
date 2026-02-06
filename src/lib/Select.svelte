@@ -500,6 +500,11 @@
     const optionValue = getOptionValue(option);
 
     if (multiple) {
+      // Ensure value is an array (v3.2.0: fix for grouped multi-select)
+      if (!value || !Array.isArray(value)) {
+        value = [];
+      }
+
       const index = value.indexOf(optionValue);
       if (index > -1) {
         // Deselecting
