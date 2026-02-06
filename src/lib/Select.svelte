@@ -103,6 +103,11 @@
     highlightClassName = "search-highlight", // CSS class for highlighted text
     showOptionDescriptions = true, // Show option.description if available
 
+    // v3.2.0 NEW FEATURES
+    groupSelectsAll = false, // Enable group selection/deselection
+    showAvatar = false, // Show avatars from option.image or option.avatar
+    floatingLabel = false, // Material Design-style floating label
+
     // Custom rendering (Svelte 5 snippets)
     optionTemplate = null, // Custom option template snippet
     tagTemplate = null, // Custom tag template snippet
@@ -150,6 +155,7 @@
   let isOpen = $state(false);
   let searchTerm = $state("");
   let highlightedIndex = $state(-1);
+  let highlightedValue = $state(null); // v3.2.0: For grouped options highlighting
   let selectContainer = $state(null);
   let searchInput = $state(null);
   let menuRef = $state(null);
@@ -202,6 +208,11 @@
       ? selectedOptions.slice(0, maxTagsDisplay)
       : selectedOptions;
   });
+
+  // v3.2.0 - Floating label state
+  const shouldFloatLabel = $derived(
+    floatingLabel && (isOpen || (value != null && (multiple ? (Array.isArray(value) && value.length > 0) : true)))
+  );
 
   const hiddenTagsCount = $derived.by(() => {
     return maxTagsDisplay && selectedOptions?.length > maxTagsDisplay
@@ -468,6 +479,8 @@
     } else {
       onMenuClose?.();
       searchTerm = "";
+      highlightedIndex = -1;
+      highlightedValue = null; // v3.2.0: Reset highlighted value for groups
 
       if (announceChanges) {
         liveRegionMessage = "Options menu closed";
@@ -487,6 +500,11 @@
     const optionValue = getOptionValue(option);
 
     if (multiple) {
+      // Ensure value is an array (v3.2.0: fix for grouped multi-select)
+      if (!value || !Array.isArray(value)) {
+        value = [];
+      }
+
       const index = value.indexOf(optionValue);
       if (index > -1) {
         // Deselecting
@@ -582,6 +600,65 @@
     } else {
       selectAll();
     }
+  }
+
+  // ========== GROUP SELECTION (v3.2.0) ==========
+  function toggleGroupSelection(groupName, groupOptions) {
+    if (!multiple || !groupSelectsAll) return;
+
+    // Ensure value is an array
+    if (!value || !Array.isArray(value)) {
+      value = [];
+    }
+
+    const groupValues = groupOptions
+      .filter(opt => !isOptionDisabled(opt))
+      .map(opt => getOptionValue(opt));
+
+    // Check if all group options are selected
+    const allGroupSelected = groupValues.length > 0 && groupValues.every(val => value.includes(val));
+
+    if (allGroupSelected) {
+      // Deselect all in group
+      value = value.filter(v => !groupValues.includes(v));
+      if (announceChanges) {
+        liveRegionMessage = `Deselected all items in group ${groupName}`;
+      }
+    } else {
+      // Select all in group (respecting maxSelected limit)
+      const newValues = [...new Set([...value, ...groupValues])];
+      if (maxSelected && newValues.length > maxSelected) {
+        showMaxSelectionWarning = true;
+        onMaxSelected?.({ max: maxSelected, message: maxSelectedMessage(maxSelected) });
+        setTimeout(() => {
+          showMaxSelectionWarning = false;
+        }, 3000);
+        return;
+      }
+      value = newValues;
+      if (announceChanges) {
+        liveRegionMessage = `Selected all items in group ${groupName}`;
+      }
+    }
+
+    onChange?.({ value, action: allGroupSelected ? 'deselect-all' : 'select-all' });
+  }
+
+  function isGroupFullySelected(groupOptions) {
+    if (!multiple || !value || !Array.isArray(value)) return false;
+    const groupValues = groupOptions
+      .filter(opt => !isOptionDisabled(opt))
+      .map(opt => getOptionValue(opt));
+    return groupValues.length > 0 && groupValues.every(val => value.includes(val));
+  }
+
+  function isGroupPartiallySelected(groupOptions) {
+    if (!multiple || !value || !Array.isArray(value)) return false;
+    const groupValues = groupOptions
+      .filter(opt => !isOptionDisabled(opt))
+      .map(opt => getOptionValue(opt));
+    const selectedCount = groupValues.filter(val => value.includes(val)).length;
+    return selectedCount > 0 && selectedCount < groupValues.length;
   }
 
   // ========== SEARCH ==========
@@ -913,6 +990,16 @@
     collapsedGroups = newCollapsed;
   }
 
+  // ========== INDETERMINATE CHECKBOX ACTION (v3.2.0) ==========
+  function indeterminate(node, isIndeterminate) {
+    node.indeterminate = isIndeterminate;
+    return {
+      update(isIndeterminate) {
+        node.indeterminate = isIndeterminate;
+      }
+    };
+  }
+
   // ========== PORTAL ==========
   function createPortal() {
     if (!usePortal) return;
@@ -954,6 +1041,7 @@
   class:disabled
   class:rtl={isRtl}
   class:command-palette={commandPaletteMode && commandPaletteOpen}
+  class:floating-label-mode={floatingLabel}
   bind:this={selectContainer}
   onkeydown={handleKeydown}
   onpaste={handlePaste}
@@ -965,6 +1053,12 @@
   onfocus={handleFocus}
   style="{customStyles.container || ''}"
 >
+  {#if floatingLabel}
+    <label class="floating-label" class:floated={shouldFloatLabel}>
+      {placeholder}
+    </label>
+  {/if}
+
   <div
     class="select-trigger"
     class:open={isOpen}
@@ -1011,6 +1105,11 @@
               {#if tagTemplate}
                 {@render tagTemplate(option)}
               {:else}
+                {#if showAvatar && (option.image || option.avatar)}
+                  <span class="tag-avatar">
+                    <img src={option.image || option.avatar} alt="" class="tag-avatar-img" />
+                  </span>
+                {/if}
                 <span class="tag-label">{getOptionLabel(option)}</span>
               {/if}
 
@@ -1172,11 +1271,37 @@
                   class="option-group-label"
                   class:collapsible={collapsibleGroups}
                   class:collapsed={isCollapsed}
-                  onclick={() => toggleGroupCollapse(groupName)}
-                  role={collapsibleGroups ? 'button' : 'presentation'}
+                  class:selectable={groupSelectsAll && multiple}
+                  onclick={(e) => {
+                    // Don't trigger if clicking on checkbox
+                    if (e.target instanceof HTMLInputElement && e.target.type === 'checkbox') return;
+
+                    if (collapsibleGroups) {
+                      toggleGroupCollapse(groupName);
+                    } else if (groupSelectsAll && multiple) {
+                      toggleGroupSelection(groupName, groupOptions);
+                    }
+                  }}
+                  role={collapsibleGroups || (groupSelectsAll && multiple) ? 'button' : 'presentation'}
                   aria-expanded={collapsibleGroups ? !isCollapsed : undefined}
-                  tabindex={collapsibleGroups ? 0 : -1}
+                  tabindex={collapsibleGroups || (groupSelectsAll && multiple) ? 0 : -1}
                 >
+                  {#if multiple && groupSelectsAll}
+                    <span class="group-checkbox-wrapper">
+                      <input
+                        type="checkbox"
+                        checked={isGroupFullySelected(groupOptions)}
+                        use:indeterminate={isGroupPartiallySelected(groupOptions)}
+                        onchange={(e) => {
+                          e.stopPropagation();
+                          toggleGroupSelection(groupName, groupOptions);
+                        }}
+                        onclick={(e) => e.stopPropagation()}
+                        tabindex="-1"
+                        aria-label={`Select all in ${groupName}`}
+                      />
+                    </span>
+                  {/if}
                   {#if collapsibleGroups}
                     <svg class="group-chevron" class:collapsed={isCollapsed} width="12" height="12" viewBox="0 0 20 20">
                       <path d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"></path>
@@ -1187,20 +1312,21 @@
 
                 {#if !isCollapsed}
                   {#each groupOptions as option, index (getOptionValue(option))}
+                    {@const optionValue = getOptionValue(option)}
                     <div
                       class="option"
                       class:selected={isSelected(option)}
-                      class:highlighted={index === highlightedIndex}
+                      class:highlighted={optionValue === highlightedValue}
                       class:disabled={isOptionDisabled(option)}
                       class:hidden={hideSelectedOptions && isSelected(option)}
                       onclick={() => selectOption(option)}
                       onkeydown={(e) => e.key === 'Enter' && selectOption(option)}
-                      onmouseenter={() => highlightedIndex = index}
+                      onmouseenter={() => highlightedValue = optionValue}
                       role="option"
                       tabindex="-1"
                       aria-selected={isSelected(option)}
                       aria-disabled={isOptionDisabled(option)}
-                      in:fly="{{ y: -5, duration: 150, delay: index * 15 }}"
+                      in:fly="{{ y: -5, duration: 150, delay: Math.min(index * 15, 300) }}"
                     >
                       {#if multiple && showCheckboxes}
                         {#key value}
@@ -1219,7 +1345,11 @@
                       {#if optionTemplate}
                         {@render optionTemplate(option, isSelected(option))}
                       {:else}
-                        {#if showOptionIcons && option.icon}
+                        {#if showAvatar && (option.image || option.avatar)}
+                          <span class="option-avatar">
+                            <img src={option.image || option.avatar} alt="" class="option-avatar-img" />
+                          </span>
+                        {:else if showOptionIcons && option.icon}
                           <span class="option-icon">
                             {#if typeof option.icon === 'string'}
                               <img src={option.icon} alt="" class="option-icon-img" />
@@ -1303,7 +1433,11 @@
                     {#if optionTemplate && !option.__isCreate__}
                       {@render optionTemplate(option, isSelected(option))}
                     {:else}
-                      {#if showOptionIcons && option.icon && !option.__isCreate__}
+                      {#if showAvatar && (option.image || option.avatar) && !option.__isCreate__}
+                        <span class="option-avatar">
+                          <img src={option.image || option.avatar} alt="" class="option-avatar-img" />
+                        </span>
+                      {:else if showOptionIcons && option.icon && !option.__isCreate__}
                         <span class="option-icon">
                           {#if typeof option.icon === 'string'}
                             <img src={option.icon} alt="" class="option-icon-img" />
@@ -1385,7 +1519,11 @@
                 {#if optionTemplate && !option.__isCreate__}
                   {@render optionTemplate(option, isSelected(option))}
                 {:else}
-                  {#if showOptionIcons && option.icon && !option.__isCreate__}
+                  {#if showAvatar && (option.image || option.avatar) && !option.__isCreate__}
+                    <span class="option-avatar">
+                      <img src={option.image || option.avatar} alt="" class="option-avatar-img" />
+                    </span>
+                  {:else if showOptionIcons && option.icon && !option.__isCreate__}
                     <span class="option-icon">
                       {#if typeof option.icon === 'string'}
                         <img src={option.icon} alt="" class="option-icon-img" />
@@ -2175,4 +2313,96 @@
   .theme-dark .check-icon, .theme-dark .option.create-option { color: #1F2937; }
   .theme-dark .spinner { border-top-color: #1F2937; }
   .theme-dark .search-input:focus { border-color: #1F2937; box-shadow: 0 0 0 1px #1F2937; }
+
+  /* ========== v3.2.0 NEW FEATURES STYLES ========== */
+
+  /* Avatar Support */
+  .option-avatar,
+  .tag-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #F3F4F6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tag-avatar {
+    width: 20px;
+    height: 20px;
+  }
+
+  .option-avatar-img,
+  .tag-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Group Selection Checkbox */
+  .option-group-label.selectable {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .option-group-label.selectable:hover {
+    background: #F9FAFB;
+  }
+
+  .group-checkbox-wrapper {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+  }
+
+  .group-checkbox-wrapper input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #2684FF;
+  }
+
+  /* Floating Label Mode */
+  .select-container.floating-label-mode {
+    position: relative;
+    padding-top: 8px;
+  }
+
+  .floating-label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: white;
+    padding: 0 4px;
+    color: #6B7280;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 14px;
+    z-index: 1;
+  }
+
+  .floating-label.floated {
+    top: 0;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #2684FF;
+    font-weight: 500;
+  }
+
+  .select-container.floating-label-mode .select-trigger {
+    padding-top: 10px;
+  }
+
+  .select-container.floating-label-mode .placeholder {
+    opacity: 0;
+  }
+
+  .select-container.floating-label-mode .floating-label.floated + .select-trigger .placeholder {
+    opacity: 1;
+  }
 </style>

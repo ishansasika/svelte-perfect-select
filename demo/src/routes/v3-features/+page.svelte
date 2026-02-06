@@ -112,6 +112,41 @@
   // Touch Gestures Demo
   let touchTags = $state(['tag1', 'tag2', 'tag3']);
 
+  // ========== v3.2.0 DEMOS ==========
+
+  // Group Selection Demo
+  let teamMembers = [
+    { id: '1', label: 'Alice Johnson', value: 'alice', group: 'Engineering' },
+    { id: '2', label: 'Bob Smith', value: 'bob', group: 'Engineering' },
+    { id: '3', label: 'Charlie Brown', value: 'charlie', group: 'Engineering' },
+    { id: '4', label: 'Diana Prince', value: 'diana', group: 'Design' },
+    { id: '5', label: 'Eve Wilson', value: 'eve', group: 'Design' },
+    { id: '6', label: 'Frank Miller', value: 'frank', group: 'Marketing' },
+    { id: '7', label: 'Grace Lee', value: 'grace', group: 'Marketing' },
+    { id: '8', label: 'Henry Davis', value: 'henry', group: 'Marketing' }
+  ];
+  let groupSelectionValue = $state([]);
+
+  // Native Avatar Demo
+  let avatarUsers = [
+    { id: '1', label: 'John Doe', value: 'john', avatar: 'https://i.pravatar.cc/150?img=1' },
+    { id: '2', label: 'Jane Smith', value: 'jane', avatar: 'https://i.pravatar.cc/150?img=5' },
+    { id: '3', label: 'Bob Johnson', value: 'bob', image: 'https://i.pravatar.cc/150?img=12' },
+    { id: '4', label: 'Alice Williams', value: 'alice', image: 'https://i.pravatar.cc/150?img=9' },
+    { id: '5', label: 'Charlie Davis', value: 'charlie', avatar: 'https://i.pravatar.cc/150?img=3' }
+  ];
+  let avatarValue = $state([]);
+
+  // Floating Label Demo
+  let floatingOptions = [
+    { id: 'react', label: 'React', value: 'react' },
+    { id: 'vue', label: 'Vue.js', value: 'vue' },
+    { id: 'svelte', label: 'Svelte', value: 'svelte' },
+    { id: 'angular', label: 'Angular', value: 'angular' }
+  ];
+  let floatingValue = $state(null);
+  let floatingMultiValue = $state([]);
+
   // ========== v3.1.0 DEMOS ==========
 
   // Search Highlighting Demo
@@ -161,6 +196,130 @@
       Explore all the amazing new features in Svelte Perfect Select v3.x
     </p>
   </header>
+
+  <!-- ========== v3.2.0 FEATURES ========== -->
+  <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 mb-8">
+    <h2 class="text-2xl font-bold text-indigo-800 mb-2">✨ New in v3.2.0</h2>
+    <p class="text-indigo-700">Group selection, native avatar support, and floating labels</p>
+  </div>
+
+  <!-- Group Selection -->
+  <section class="space-y-4">
+    <div class="flex items-center gap-3">
+      <span class="text-4xl">☑️</span>
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800">Group Selection</h2>
+        <p class="text-gray-600">Select or deselect entire groups with a single click</p>
+      </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <p class="text-sm text-gray-600 mb-4">
+        Click the checkbox in the group header to select all members in that department!
+      </p>
+      <Select
+        options={teamMembers}
+        bind:value={groupSelectionValue}
+        isGrouped={true}
+        groupBy={(option) => option.group}
+        multiple={true}
+        groupSelectsAll={true}
+        showCheckboxes={true}
+        placeholder="Select team members..."
+        theme="indigo"
+      />
+      {#if groupSelectionValue.length > 0}
+        <p class="mt-4 text-sm text-gray-700">
+          Selected {groupSelectionValue.length} member{groupSelectionValue.length !== 1 ? 's' : ''}:
+          <code class="bg-gray-100 px-2 py-1 rounded ml-2">{groupSelectionValue.join(', ')}</code>
+        </p>
+      {/if}
+    </div>
+  </section>
+
+  <!-- Native Avatar Support -->
+  <section class="space-y-4">
+    <div class="flex items-center gap-3">
+      <span class="text-4xl">👤</span>
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800">Native Avatar Support</h2>
+        <p class="text-gray-600">Display circular avatars in options and tags</p>
+      </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <p class="text-sm text-gray-600 mb-4">
+        Add <code class="bg-gray-100 px-2 py-1 rounded">image</code> or <code class="bg-gray-100 px-2 py-1 rounded">avatar</code> to your option objects - no custom templates needed!
+      </p>
+      <Select
+        options={avatarUsers}
+        bind:value={avatarValue}
+        multiple={true}
+        showAvatar={true}
+        placeholder="Select users..."
+        theme="purple"
+      />
+      {#if avatarValue.length > 0}
+        <p class="mt-4 text-sm text-gray-700">
+          Selected: <code class="bg-gray-100 px-2 py-1 rounded">{avatarValue.join(', ')}</code>
+        </p>
+      {/if}
+    </div>
+  </section>
+
+  <!-- Floating Label -->
+  <section class="space-y-4">
+    <div class="flex items-center gap-3">
+      <span class="text-4xl">🏷️</span>
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800">Floating Label</h2>
+        <p class="text-gray-600">Material Design-style animated placeholder</p>
+      </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <p class="text-sm text-gray-600 mb-4">
+        The placeholder animates up when focused or when a value is selected.
+      </p>
+      <div class="space-y-6">
+        <div>
+          <h3 class="text-sm font-semibold text-gray-700 mb-2">Single Select</h3>
+          <Select
+            options={floatingOptions}
+            bind:value={floatingValue}
+            floatingLabel={true}
+            placeholder="Choose your framework"
+            theme="blue"
+          />
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-gray-700 mb-2">Multi Select</h3>
+          <Select
+            options={floatingOptions}
+            bind:value={floatingMultiValue}
+            multiple={true}
+            floatingLabel={true}
+            placeholder="Select frameworks"
+            theme="pink"
+          />
+        </div>
+      </div>
+      {#if floatingValue || floatingMultiValue.length > 0}
+        <p class="mt-4 text-sm text-gray-700">
+          Selected:
+          {#if floatingValue}
+            <code class="bg-gray-100 px-2 py-1 rounded">{floatingValue}</code>
+          {/if}
+          {#if floatingMultiValue.length > 0}
+            <code class="bg-gray-100 px-2 py-1 rounded ml-2">{floatingMultiValue.join(', ')}</code>
+          {/if}
+        </p>
+      {/if}
+    </div>
+  </section>
+
+  <!-- Divider for v3.1.0 features -->
+  <div class="border-t-2 border-gray-200 pt-8">
+    <h2 class="text-2xl font-bold text-gray-700 mb-2">v3.1.0 Features</h2>
+    <p class="text-gray-500">Enhanced search and positioning capabilities</p>
+  </div>
 
   <!-- ========== v3.1.0 FEATURES ========== -->
   <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 mb-8">

@@ -94,6 +94,28 @@
       description: 'Show subtitle descriptions for options',
       version: 'v3.1.0',
       highlight: true
+    },
+    // v3.2.0 Features
+    {
+      icon: '☑️',
+      title: 'Group Selection',
+      description: 'Select or deselect entire groups with a single click',
+      version: 'v3.2.0',
+      highlight: true
+    },
+    {
+      icon: '👤',
+      title: 'Native Avatars',
+      description: 'Display circular avatars in options and tags',
+      version: 'v3.2.0',
+      highlight: true
+    },
+    {
+      icon: '🏷️',
+      title: 'Floating Label',
+      description: 'Material Design-style animated placeholder',
+      version: 'v3.2.0',
+      highlight: true
     }
   ];
 
@@ -161,11 +183,11 @@
       ✨ Now with Svelte 5 Runes
     </div>
     <h1 class="text-5xl md:text-6xl font-bold mb-6">
-      Svelte Perfect Select <span class="text-yellow-300">v3.1.0</span>
+      Svelte Perfect Select <span class="text-yellow-300">v3.2.0</span>
     </h1>
     <p class="text-lg md:text-xl mb-8 max-w-3xl mx-auto">
       The most advanced select component for Svelte 5. Virtual scrolling, drag-drop, fuzzy search,
-      search highlighting, and WCAG AAA accessibility. Zero dependencies, 100% customizable.
+      group selection, avatar support, and WCAG AAA accessibility. Zero dependencies, 100% customizable.
     </p>
 
     <!-- Live Demo -->
