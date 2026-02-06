@@ -155,6 +155,7 @@
   let isOpen = $state(false);
   let searchTerm = $state("");
   let highlightedIndex = $state(-1);
+  let highlightedValue = $state(null); // v3.2.0: For grouped options highlighting
   let selectContainer = $state(null);
   let searchInput = $state(null);
   let menuRef = $state(null);
@@ -478,6 +479,8 @@
     } else {
       onMenuClose?.();
       searchTerm = "";
+      highlightedIndex = -1;
+      highlightedValue = null; // v3.2.0: Reset highlighted value for groups
 
       if (announceChanges) {
         liveRegionMessage = "Options menu closed";
@@ -1304,20 +1307,21 @@
 
                 {#if !isCollapsed}
                   {#each groupOptions as option, index (getOptionValue(option))}
+                    {@const optionValue = getOptionValue(option)}
                     <div
                       class="option"
                       class:selected={isSelected(option)}
-                      class:highlighted={index === highlightedIndex}
+                      class:highlighted={optionValue === highlightedValue}
                       class:disabled={isOptionDisabled(option)}
                       class:hidden={hideSelectedOptions && isSelected(option)}
                       onclick={() => selectOption(option)}
                       onkeydown={(e) => e.key === 'Enter' && selectOption(option)}
-                      onmouseenter={() => highlightedIndex = index}
+                      onmouseenter={() => highlightedValue = optionValue}
                       role="option"
                       tabindex="-1"
                       aria-selected={isSelected(option)}
                       aria-disabled={isOptionDisabled(option)}
-                      in:fly="{{ y: -5, duration: 150, delay: index * 15 }}"
+                      in:fly="{{ y: -5, duration: 150, delay: Math.min(index * 15, 300) }}"
                     >
                       {#if multiple && showCheckboxes}
                         {#key value}
