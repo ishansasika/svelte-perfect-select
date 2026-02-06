@@ -598,12 +598,17 @@
   function toggleGroupSelection(groupName, groupOptions) {
     if (!multiple || !groupSelectsAll) return;
 
+    // Ensure value is an array
+    if (!value || !Array.isArray(value)) {
+      value = [];
+    }
+
     const groupValues = groupOptions
       .filter(opt => !isOptionDisabled(opt))
       .map(opt => getOptionValue(opt));
 
     // Check if all group options are selected
-    const allGroupSelected = groupValues.every(val => value.includes(val));
+    const allGroupSelected = groupValues.length > 0 && groupValues.every(val => value.includes(val));
 
     if (allGroupSelected) {
       // Deselect all in group
@@ -1260,10 +1265,13 @@
                   class:collapsed={isCollapsed}
                   class:selectable={groupSelectsAll && multiple}
                   onclick={(e) => {
-                    if (groupSelectsAll && multiple && !e.target.closest('.group-checkbox-wrapper')) {
-                      toggleGroupSelection(groupName, groupOptions);
-                    } else if (collapsibleGroups) {
+                    // Don't trigger if clicking on checkbox
+                    if (e.target instanceof HTMLInputElement && e.target.type === 'checkbox') return;
+
+                    if (collapsibleGroups) {
                       toggleGroupCollapse(groupName);
+                    } else if (groupSelectsAll && multiple) {
+                      toggleGroupSelection(groupName, groupOptions);
                     }
                   }}
                   role={collapsibleGroups || (groupSelectsAll && multiple) ? 'button' : 'presentation'}
@@ -1271,15 +1279,16 @@
                   tabindex={collapsibleGroups || (groupSelectsAll && multiple) ? 0 : -1}
                 >
                   {#if multiple && groupSelectsAll}
-                    <span class="group-checkbox-wrapper" onclick={(e) => e.stopPropagation()}>
+                    <span class="group-checkbox-wrapper">
                       <input
                         type="checkbox"
                         checked={isGroupFullySelected(groupOptions)}
                         use:indeterminate={isGroupPartiallySelected(groupOptions)}
-                        onclick={(e) => {
+                        onchange={(e) => {
                           e.stopPropagation();
                           toggleGroupSelection(groupName, groupOptions);
                         }}
+                        onclick={(e) => e.stopPropagation()}
                         tabindex="-1"
                         aria-label={`Select all in ${groupName}`}
                       />
