@@ -14,7 +14,8 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install and build demo
+
+      - name: Install and build
         run: cd demo && npm i && npm run build
 
       - name: Authenticate to Google Cloud
@@ -23,4 +24,11 @@ jobs:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SVELTE_PERFECT_SELECT }}
 
       - name: Deploy to Firebase Hosting
-        run: npx firebase-tools@latest deploy --only hosting --project svelte-perfect-select --non-interactive
+        run: |
+          OUTPUT=$(npx firebase-tools@latest deploy --only hosting --project svelte-perfect-select --non-interactive 2>&1)
+          DEPLOY_EXIT=$?
+          echo "$OUTPUT"
+          if [ $DEPLOY_EXIT -ne 0 ]; then
+            echo "$OUTPUT" | grep -q "is the current active version" || exit $DEPLOY_EXIT
+            echo "Skipping: already the current active version."
+          fi
