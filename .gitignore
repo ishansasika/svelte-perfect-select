@@ -13,7 +13,6 @@ dist-ssr
 *.local
 
 # Editor directories and files
-.vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -34,3 +33,7 @@ demo/node_modules/
 # Build artifacts
 *.tgz
 *.zip
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+config.bat
