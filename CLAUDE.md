@@ -150,3 +150,26 @@ When working on features:
 - Demo builds to `demo/build/` (static site, not committed to git)
 - Build artifacts (*.tgz, *.zip) are gitignored
 - Demo dependencies and build artifacts are gitignored but demo source is committed
+
+## Git Conventions
+
+### Commit Format
+```
+feat: Add <description>
+fix: Fix <description>
+docs: Update <description>
+```
+
+- One component per commit where possible
+- Use lowercase after the prefix
+- Keep messages concise and descriptive
+
+### Branch Naming
+```
+release/v{version}-{short-description}
+```
+Example: `release/v4.1.0-neon-status-particle`
+
+### Important Rules
+- **Never add `Co-Authored-By: Claude` lines** to any commit messages or PR descriptions
+- **Never include AI attribution** in commits, PRs, or any git history
