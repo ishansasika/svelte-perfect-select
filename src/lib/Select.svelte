@@ -319,6 +319,14 @@
     }
   });
 
+  $effect(() => {
+    if (disabled && isOpen) {
+      isOpen = false;
+      commandPaletteOpen = false;
+      untrack(resetClosedMenu);
+    }
+  });
+
   // Announce changes to screen readers (v3.0.0 Accessibility)
   $effect(() => {
     if (enhancedAccessibility && announceChanges && liveRegionMessage) {
@@ -454,6 +462,7 @@
 
     if (!isOpen && loadOptions && defaultOptions) {
       await handleLoadOptions('');
+      if (disabled) return;
     }
 
     isOpen = !isOpen;
@@ -477,19 +486,25 @@
         liveRegionMessage = "Options menu opened";
       }
     } else {
-      onMenuClose?.();
-      searchTerm = "";
-      highlightedIndex = -1;
-      highlightedValue = null; // v3.2.0: Reset highlighted value for groups
+      resetClosedMenu();
+    }
+  }
 
-      if (announceChanges) {
-        liveRegionMessage = "Options menu closed";
-      }
+  function resetClosedMenu() {
+    onMenuClose?.();
+    searchTerm = "";
+    highlightedIndex = -1;
+    highlightedValue = null;
+
+    if (announceChanges) {
+      liveRegionMessage = "Options menu closed";
     }
   }
 
   // ========== SELECT OPTION ==========
   function selectOption(option) {
+    if (disabled) return;
+
     if (option.__isCreate__) {
       createOption(option.value);
       return;
@@ -1199,6 +1214,7 @@
       class:command-palette-dropdown={commandPaletteMode && commandPaletteOpen}
       style="max-height: {maxHeight}"
       role="listbox"
+      inert={disabled}
       aria-multiselectable={multiple}
       in:fly="{{ y: useSpringAnimations ? $dropdownY : -10, duration: 200 }}"
       out:fade="{{ duration: 150 }}"
